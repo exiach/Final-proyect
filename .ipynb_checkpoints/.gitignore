@@ -1,0 +1,86 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# =========================
+# Virtual Environments
+# =========================
+venv/
+.venv/
+env/
+ENV/
+
+# =========================
+# Environment Variables
+# =========================
+.env
+.env.*
+*.env
+
+# =========================
+# Jupyter Notebook
+# =========================
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# =========================
+# Data Files (IMPORTANT)
+# =========================
+data/
+datasets/
+*.csv
+*.xlsx
+*.parquet
+*.feather
+*.h5
+*.pickle
+*.pkl
+
+# =========================
+# ML Models
+# =========================
+models/
+*.h5
+*.hdf5
+*.joblib
+*.sav
+*.model
+*.onnx
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# macOS
+# =========================
+.DS_Store
+._*
+
+# =========================
+# Distribution
+# =========================
+build/
+dist/
+*.egg-info/
+
+# =========================
+# Testing & Coverage
+# =========================
+htmlcov/
+.coverage
+.coverage.*
+.cache
+pytest_cache/
