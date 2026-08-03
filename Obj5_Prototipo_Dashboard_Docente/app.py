@@ -1,136 +1,75 @@
+"""
+Punto de Entrada Principal: Sistema de Apoyo a la Decisión Docente.
+Prototipo de Alertas Tempranas para la Prevención de Rezago Escolar.
+"""
+
 import streamlit as st
-import pandas as pd
-import joblib
-import os
-import plotly.express as px
+from src.data_loader import load_base_data
+from src.predictor import load_trained_models, enrich_with_predictions
+from src.ui.styles import apply_custom_styles, render_header_banner
+from src.ui.sidebar import render_sidebar
+from src.ui.filters_bar import render_top_filters_bar
+from src.ui.tab_course_mon import render_tab_course_monitoring
+from src.ui.tab_student_sim import render_tab_student_simulation
+from src.ui.tab_free_sim import render_tab_free_simulation
 
-# Configuración principal
-st.set_page_config(page_title="Alerta Docente", page_icon="📚", layout="wide")
 
-# Rutas a los recursos
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODELS_DIR = os.path.join(BASE_DIR, "../modelos_entrenados")
-DATA_PATH = os.path.join(BASE_DIR, "../data/03_Datasets_Procesados/primaria_03_Datasets_Procesados.csv")
+# Configuración principal de la aplicación Streamlit
+st.set_page_config(
+    page_title="Sistema de Alertas Tempranas - Apoyo a la Decisión Docente",
+    page_icon="🏫",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-@st.cache_resource
-def load_modelos_entrenados():
-    """Carga los modelos entrenados y el escalador desde la carpeta modelos_entrenados/"""
-    rf_model = joblib.load(os.path.join(MODELS_DIR, "random_forest_model.pkl"))
-    mlp_model = joblib.load(os.path.join(MODELS_DIR, "mlp_model.pkl"))
-    scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
-    return rf_model, mlp_model, scaler
-
-@st.cache_data
-def load_data():
-    """Carga los datos históricos para contexto visual"""
-    if os.path.exists(DATA_PATH):
-        df = pd.read_csv(DATA_PATH)
-        return df
-    return None
-
-def main():
-    st.title("📚 Sistema de Prevención de Rezago Académico")
-    st.markdown("Prototipo de apoyo a la decisión docente para la identificación temprana de estudiantes en riesgo, parte de los objetivos del diplomado.")
-
-    # Intentar cargar los modelos
+def main() -> None:
+    # 1. Aplicar diseño visual sofisticado (Warm Academic Modern CSS)
+    apply_custom_styles()
+    render_header_banner()
+    
+    # 2. Cargar recursos de Machine Learning
     try:
-        rf_model, mlp_model, scaler = load_modelos_entrenados()
+        rf_model, mlp_model, scaler = load_trained_models()
     except Exception as e:
-        st.error(f"No se pudieron cargar los modelos: {e}. Asegurate de ejecutar la libreta 06_modelo_redes_neuronales.ipynb primero.")
+        st.error(f"❌ Error al cargar los modelos predictivos: {e}. Verifique la carpeta `modelos_entrenados`.")
         return
 
-    # Cargar datos históricos
-    df = load_data()
-    
-    # --- BARRA LATERAL (ENTRADAS) ---
-    st.sidebar.header("Parámetros del Estudiante")
-    st.sidebar.markdown("Ingrese el desempeño del estudiante en el año anterior:")
-    
-    promedio = st.sidebar.slider("Promedio General (Año Previo)", 0.0, 100.0, 60.0, 1.0)
-    reprobadas = st.sidebar.slider("Materias Reprobadas (Año Previo)", 0, 9, 0, 1)
-    
-    modelo_seleccionado = st.sidebar.selectbox(
-        "Seleccione el Modelo Predictivo", 
-        ["Random Forest (Recomendado)", "Red Neuronal (MLP)"]
-    )
+    # 3. Cargar dataset base
+    df_data = load_base_data()
+    if df_data is None:
+        st.error("❌ No se pudo cargar el dataset de estudiantes.")
+        return
 
-    # --- LÓGICA DE PREDICCIÓN ---
-    input_data = pd.DataFrame({
-        "promedio_general_prev": [promedio],
-        "num_materias_reprobadas_prev": [reprobadas]
-    })
-    
-    if "Random Forest" in modelo_seleccionado:
-        prob = rf_model.predict_proba(input_data)[0][1]
-    else:
-        input_scaled = scaler.transform(input_data)
-        prob = mlp_model.predict_proba(input_scaled)[0][1]
-        
-    # --- CATEGORIZACIÓN ---
-    if prob >= 0.7:
-        riesgo = "Alto"
-        color = "#ff4b4b"
-    elif prob >= 0.4:
-        riesgo = "Medio"
-        color = "#ffa421"
-    else:
-        riesgo = "Bajo"
-        color = "#00c04b"
+    # 4. Renderizar la barra lateral (Uploader 2025 y Leyendas)
+    df_data = render_sidebar(df_data)
 
-    # --- PANTALLA PRINCIPAL ---
-    col1, col2 = st.columns([1, 2])
-    
-    with col1:
-        st.subheader("Evaluación de Riesgo Actual")
-        st.markdown(f"<h1 style='text-align: center; color: {color};'>{riesgo}</h1>", unsafe_allow_html=True)
-        st.markdown(f"<h3 style='text-align: center;'>Probabilidad de Rezago: {prob*100:.1f}%</h3>", unsafe_allow_html=True)
-        st.progress(float(prob))
-        
-        # Alertas Tempranas
-        if riesgo == "Alto":
-            st.error("⚠️ El estudiante presenta un **alto riesgo** de rezago escolar el próximo año. Se recomienda derivación pedagógica e intervención inmediata.")
-        elif riesgo == "Medio":
-            st.warning("⚠️ El estudiante presenta **signos de alerta temprana**. Se sugiere seguimiento bimensual y tutorías de apoyo.")
-        else:
-            st.success("✅ El estudiante presenta un **desempeño estable**. Continuar con la metodología actual.")
-            
-    with col2:
-        if df is not None:
-            st.subheader("Contexto Histórico General")
-            st.markdown("Distribución del riesgo según el promedio y materias reprobadas en la base de históricos.")
-            
-            # Limpiar datos para el plot
-            df_plot = df.dropna(subset=["promedio_general", "num_materias_reprobadas", "rezago"]).copy()
-            df_plot["Estado"] = df_plot["rezago"].map({1: "Rezago (Histórico)", 0: "Estable (Histórico)"})
-            
-            fig = px.scatter(
-                df_plot, 
-                x="promedio_general", 
-                y="num_materias_reprobadas", 
-                color="Estado",
-                color_discrete_map={"Rezago (Histórico)": "#ff4b4b", "Estable (Histórico)": "#00c04b"},
-                opacity=0.3,
-                title="Posicionamiento del Estudiante vs. Histórico"
-            )
-            
-            # Agregar el punto de simulacion actual
-            fig.add_scatter(
-                x=[promedio], y=[reprobadas],
-                mode='markers+text',
-                marker=dict(size=18, color='black', symbol='star'),
-                name='Estudiante Simulado',
-                text=["Estudiante"], textposition="top center"
-            )
-            
-            # Mejorar layout del grafico
-            fig.update_layout(
-                xaxis_title="Promedio General",
-                yaxis_title="Cantidad de Materias Reprobadas"
-            )
-            
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("No se encontró el archivo de datos históricos para visualización cruzada.")
+    # 5. Renderizar la BARRA HORIZONTAL DE FILTROS SUPERIOR (Arriba de las Pestañas)
+    modelo_sel, df_filtered, sel_gestion, gestion_predicha, sel_grado, sel_paralelo = render_top_filters_bar(df_data)
+
+    # 6. Calcular predicciones de riesgo para el dataset filtrado
+    df_filtered = enrich_with_predictions(df_filtered, modelo_sel, rf_model, mlp_model, scaler)
+
+    # 7. Renderizar las pestañas de navegación principales
+    tab1, tab2, tab3 = st.tabs([
+        "📊 Monitoreo de Curso & Alertas Tempranas",
+        "👤 Ficha de Estudiante & Simulador de Notas",
+        "🧪 Simulador Libre"
+    ])
+
+    with tab1:
+        render_tab_course_monitoring(
+            df_filtered, sel_gestion, gestion_predicha, sel_grado, sel_paralelo
+        )
+
+    with tab2:
+        render_tab_student_simulation(
+            df_filtered, modelo_sel, rf_model, mlp_model, scaler
+        )
+
+    with tab3:
+        render_tab_free_simulation(
+            df_data, modelo_sel, rf_model, mlp_model, scaler
+        )
 
 if __name__ == "__main__":
     main()
