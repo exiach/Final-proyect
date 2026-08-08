@@ -11,9 +11,8 @@ from sklearn.metrics import confusion_matrix
 plt.style.use('seaborn-v0_8-whitegrid')
 plt.rcParams['font.sans-serif'] = 'DejaVu Sans'
 plt.rcParams['font.size'] = 11
-plt.rcParams['axes.titlesize'] = 13
+plt.rcParams['axes.titlesize'] = 12
 plt.rcParams['axes.labelsize'] = 11
-plt.rcParams['figure.titlesize'] = 14
 
 FIG_DIR = os.path.abspath("documentacion/figuras")
 os.makedirs(FIG_DIR, exist_ok=True)
@@ -44,7 +43,7 @@ nombres_materias = {
 # FIGURA 3.1: FLUJOGRAMA METODOLÓGICO CRISP-DM ADAPTADO
 # ==============================================================================
 def gen_fig_3_1():
-    fig, ax = plt.subplots(figsize=(10, 6), dpi=300)
+    fig, ax = plt.subplots(figsize=(10, 5.5), dpi=300)
     ax.axis('off')
     
     phases = [
@@ -62,12 +61,10 @@ def gen_fig_3_1():
         x = 0.05 + col * 0.48
         y = 0.70 - row * 0.30
         
-        # Box
         rect = mpatches.FancyBboxPatch((x, y), 0.42, 0.22, boxstyle="round,pad=0.03", 
                                        ec=color, fc=color, alpha=0.1, lw=2)
         ax.add_patch(rect)
         
-        # Title box
         title_box = mpatches.FancyBboxPatch((x, y + 0.15), 0.42, 0.07, boxstyle="round,pad=0.01", 
                                             ec=color, fc=color, lw=1)
         ax.add_patch(title_box)
@@ -75,17 +72,16 @@ def gen_fig_3_1():
         ax.text(x + 0.21, y + 0.185, title, color='white', weight='bold', fontsize=11, ha='center', va='center')
         ax.text(x + 0.21, y + 0.07, desc, color='#1F2937', fontsize=9.5, ha='center', va='center')
         
-    ax.set_title("Figura 3.1: Flujograma Metodológico CRISP-DM adaptado al Proyecto", fontsize=14, pad=15, weight='bold', color='#1E293B')
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_3_1_flujograma_crisp_dm.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_3_1_flujograma_crisp_dm.png")
+    print("Generated fig_3_1_flujograma_crisp_dm.png (Clean title)")
 
 # ==============================================================================
 # FIGURA 3.2: ARQUITECTURA DE SOFTWARE DEL PROTOTIPO
 # ==============================================================================
 def gen_fig_3_2():
-    fig, ax = plt.subplots(figsize=(11, 6), dpi=300)
+    fig, ax = plt.subplots(figsize=(11, 5.5), dpi=300)
     ax.axis('off')
     
     components = [
@@ -105,36 +101,34 @@ def gen_fig_3_2():
         ax.text(x + 0.10, y + 0.30, title, color='white', weight='bold', fontsize=10, ha='center', va='center')
         ax.text(x + 0.10, y + 0.12, desc, color='#0F172A', fontsize=9, ha='center', va='center')
         
-    # Arrows
     for x_arrow in [0.255, 0.485, 0.715]:
         ax.annotate('', xy=(x_arrow + 0.02, 0.57), xytext=(x_arrow - 0.005, 0.57),
                     arrowprops=dict(arrowstyle="->", color="#334155", lw=2.5))
         
-    ax.set_title("Figura 3.2: Arquitectura de Software del Prototipo de Apoyo Docente", fontsize=14, pad=15, weight='bold', color='#1E293B')
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_3_2_arquitectura_software.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_3_2_arquitectura_software.png")
+    print("Generated fig_3_2_arquitectura_software.png (Clean title)")
 
 # ==============================================================================
 # FIGURA 3.3: FLUJO DE LA CAPA DE RESGUARDO PEDAGÓGICO
 # ==============================================================================
 def gen_fig_3_3():
-    fig, ax = plt.subplots(figsize=(10, 6.5), dpi=300)
+    fig, ax = plt.subplots(figsize=(10, 6), dpi=300)
     ax.axis('off')
     
     boxes = [
         ("Entrada Estudiante", "Promedio General & N° Materias Reprobadas", 0.35, 0.80, "#3B82F6"),
         ("Inferencia Modelo ML", "Calcula Probabilidad Base P_ML (RF / MLP)", 0.35, 0.62, "#8B5CF6"),
         ("Evaluación de Reglas de Resguardo", "¿Promedio < 51 ó Reprobadas >= 2?", 0.35, 0.42, "#F59E0B"),
-        ("SI: Ajuste Normativo", "P_final = max(P_ML, 0.85) -> 🔴 ALTO RIESGO", 0.05, 0.20, "#EF4444"),
+        ("SI: Ajuste Normativo", "P_final = max(P_ML, 0.85) -> ALTO RIESGO", 0.05, 0.20, "#EF4444"),
         ("NO: Evaluación Secundaria", "¿Reprobadas == 1 ó 51 <= Prom < 60?", 0.65, 0.42, "#3B82F6"),
-        ("SI: Alerta Media", "P_final = max(P_ML, 0.50) -> 🟡 MEDIO RIESGO", 0.45, 0.20, "#F59E0B"),
-        ("NO: Salida Estándar", "P_final = P_ML -> 🟢 BAJO RIESGO", 0.75, 0.20, "#10B981")
+        ("SI: Alerta Media", "P_final = max(P_ML, 0.50) -> MEDIO RIESGO", 0.45, 0.20, "#F59E0B"),
+        ("NO: Salida Estándar", "P_final = P_ML -> BAJO RIESGO", 0.75, 0.20, "#10B981")
     ]
     
     for title, desc, x, y, color in boxes:
-        w, h = (0.30, 0.12) if "Salida" in title or "SI:" in title else (0.30, 0.12)
+        w, h = (0.30, 0.12)
         rect = mpatches.FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.02", ec=color, fc=color, alpha=0.15, lw=2)
         ax.add_patch(rect)
         hdr = mpatches.FancyBboxPatch((x, y + h - 0.04), w, 0.04, boxstyle="round,pad=0.005", ec=color, fc=color)
@@ -142,11 +136,10 @@ def gen_fig_3_3():
         ax.text(x + w/2, y + h - 0.02, title, color='white', weight='bold', fontsize=9, ha='center', va='center')
         ax.text(x + w/2, y + (h-0.04)/2, desc, color='#0F172A', fontsize=8.5, ha='center', va='center')
 
-    ax.set_title("Figura 3.3: Diagrama de Flujo de la Capa Híbrida de Resguardo Pedagógico", fontsize=13, pad=15, weight='bold', color='#1E293B')
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_3_3_capa_hibrida_resguardo.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_3_3_capa_hibrida_resguardo.png")
+    print("Generated fig_3_3_capa_hibrida_resguardo.png (Clean title)")
 
 # ==============================================================================
 # FIGURA 4.1: TASA DE REPROBACIÓN POR MATERIA
@@ -155,7 +148,7 @@ def gen_fig_4_1():
     rates = (dataset[materias] < 51).mean().sort_values(ascending=True) * 100
     labels = [nombres_materias[m] for m in rates.index]
     
-    fig, ax = plt.subplots(figsize=(9, 5.5), dpi=300)
+    fig, ax = plt.subplots(figsize=(9, 5), dpi=300)
     colors = ['#EF4444' if r > 1.5 else '#F59E0B' if r > 0.8 else '#3B82F6' for r in rates.values]
     bars = ax.barh(labels, rates.values, color=colors, height=0.6, edgecolor='none')
     
@@ -165,27 +158,26 @@ def gen_fig_4_1():
         
     ax.set_xlim(0, 2.5)
     ax.set_xlabel("Tasa Porcentual de Reprobación (%)", fontsize=11, weight='bold')
-    ax.set_title("Figura 4.1: Tasa de Reprobación Porcentual por Asignatura Curricular", fontsize=13, pad=12, weight='bold', color='#1E293B')
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_4_1_tasa_reprobacion_materia.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_4_1_tasa_reprobacion_materia.png")
+    print("Generated fig_4_1_tasa_reprobacion_materia.png (Clean title)")
 
 # ==============================================================================
 # FIGURA 4.2: BOXPLOT MATERIAS REPROBADAS SEGÚN REZAGO
 # ==============================================================================
 def gen_fig_4_2():
-    fig, ax = plt.subplots(figsize=(7, 5), dpi=300)
+    fig, ax = plt.subplots(figsize=(7, 4.5), dpi=300)
     sns.boxplot(x='rezago', y='num_materias_reprobadas', data=dataset, ax=ax, palette=['#10B981', '#EF4444'], width=0.4)
     
+    ax.set_xticks([0, 1])
     ax.set_xticklabels(['Sin Rezago (0)', 'Con Rezago (1)'], fontsize=11, weight='bold')
     ax.set_xlabel("Condición de Rezago Académico", fontsize=11, weight='bold')
     ax.set_ylabel("Número de Materias Reprobadas (Nota < 51)", fontsize=11, weight='bold')
-    ax.set_title("Figura 4.2: Distribución del Número de Materias Reprobadas según Rezago", fontsize=13, pad=12, weight='bold', color='#1E293B')
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_4_2_boxplot_materias_reprobadas.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_4_2_boxplot_materias_reprobadas.png")
+    print("Generated fig_4_2_boxplot_materias_reprobadas.png (Clean title)")
 
 # ==============================================================================
 # FIGURA 4.3: EVOLUCIÓN TEMPORAL POR GESTIÓN
@@ -193,7 +185,7 @@ def gen_fig_4_2():
 def gen_fig_4_3():
     evol = dataset.groupby("gestion")["rezago"].mean() * 100
     
-    fig, ax = plt.subplots(figsize=(8, 4.5), dpi=300)
+    fig, ax = plt.subplots(figsize=(8, 4), dpi=300)
     bars = ax.bar(evol.index.astype(str), evol.values, color='#2563EB', width=0.45, edgecolor='none')
     
     for bar in bars:
@@ -203,11 +195,10 @@ def gen_fig_4_3():
     ax.set_ylim(0, 3.5)
     ax.set_xlabel("Gestión Académica", fontsize=11, weight='bold')
     ax.set_ylabel("Proporción de Rezago (%)", fontsize=11, weight='bold')
-    ax.set_title("Figura 4.3: Evolución de la Proporción de Rezago Académico (2021-2024)", fontsize=13, pad=12, weight='bold', color='#1E293B')
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_4_3_evolucion_rezago_gestion.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_4_3_evolucion_rezago_gestion.png")
+    print("Generated fig_4_3_evolucion_rezago_gestion.png (Clean title)")
 
 # ==============================================================================
 # FIGURA 4.4: REZAGO PROMEDIO POR CURSO
@@ -216,7 +207,7 @@ def gen_fig_4_4():
     orden_grados = ["PRIMERO", "SEGUNDO", "TERCERO", "CUARTO", "QUINTO", "SEXTO"]
     by_curso = (dataset.groupby("anio_escolaridad")["rezago"].mean() * 100).reindex(orden_grados)
     
-    fig, ax = plt.subplots(figsize=(8.5, 4.5), dpi=300)
+    fig, ax = plt.subplots(figsize=(8.5, 4), dpi=300)
     ax.plot(by_curso.index, by_curso.values, marker='o', linewidth=2.5, markersize=8, color='#8B5CF6', markerfacecolor='#6D28D9')
     
     for i, val in enumerate(by_curso.values):
@@ -225,22 +216,20 @@ def gen_fig_4_4():
     ax.set_ylim(0, 4.0)
     ax.set_xlabel("Curso de Escolaridad Primaria", fontsize=11, weight='bold')
     ax.set_ylabel("Tasa Promedio de Rezago (%)", fontsize=11, weight='bold')
-    ax.set_title("Figura 4.4: Proporción de Rezago Promedio por Grado Escolar", fontsize=13, pad=12, weight='bold', color='#1E293B')
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_4_4_rezago_promedio_curso.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_4_4_rezago_promedio_curso.png")
+    print("Generated fig_4_4_rezago_promedio_curso.png (Clean title)")
 
 # ==============================================================================
 # FIGURA 4.5: TRAYECTORIA LONGITUDINAL ESTUDIANTE
 # ==============================================================================
 def gen_fig_4_5():
-    # Pick a student with multiple years
     rudes = dataset["rude"].value_counts()
     sample_rude = rudes[rudes >= 3].index[0]
     sample_student = dataset[dataset["rude"] == sample_rude].sort_values("gestion")
     
-    fig, ax = plt.subplots(figsize=(8, 4.5), dpi=300)
+    fig, ax = plt.subplots(figsize=(8, 4), dpi=300)
     ax.plot(sample_student["gestion"].astype(str), sample_student["promedio_general"], marker='s', linewidth=2.5, markersize=8, color='#059669', markerfacecolor='#047857')
     ax.axhline(51.0, color='#EF4444', linestyle='--', linewidth=1.5, label='Límite Mínimo de Aprobación (51 pts)')
     
@@ -250,18 +239,17 @@ def gen_fig_4_5():
     ax.set_ylim(40, 100)
     ax.set_xlabel("Gestión Académica", fontsize=11, weight='bold')
     ax.set_ylabel("Promedio General (0 - 100 pts)", fontsize=11, weight='bold')
-    ax.set_title(f"Figura 4.5: Evolución Académica Longitudinal de un Estudiante de Ejemplo", fontsize=13, pad=12, weight='bold', color='#1E293B')
     ax.legend(loc='lower right', frameon=True)
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_4_5_trayectoria_estudiante_ejemplo.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_4_5_trayectoria_estudiante_ejemplo.png")
+    print("Generated fig_4_5_trayectoria_estudiante_ejemplo.png (Clean title)")
 
 # ==============================================================================
 # FIGURA 4.6: MATRICES DE CONFUSIÓN COMPARATIVAS
 # ==============================================================================
 def gen_fig_4_6():
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4), dpi=300)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 3.8), dpi=300)
     
     cm_rf = np.array([[49, 1], [1, 0]])
     cm_mlp = np.array([[50, 0], [1, 0]])
@@ -274,21 +262,20 @@ def gen_fig_4_6():
                 xticklabels=['Pred No Rezago', 'Pred Rezago'], yticklabels=['No Rezago', 'Rezago'])
     ax2.set_title("Red Neuronal MLP (StandardScaler)", fontsize=11, weight='bold')
     
-    fig.suptitle("Figura 4.6: Matrices de Confusión Comparativas en Conjunto de Prueba Filtrado (N=51)", fontsize=13, weight='bold', y=1.03, color='#1E293B')
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_4_6_matriz_confusion_modelos.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_4_6_matriz_confusion_modelos.png")
+    print("Generated fig_4_6_matriz_confusion_modelos.png (Clean title)")
 
 # ==============================================================================
 # FIGURA 4.7: DISTRIBUCIÓN DE NIVELES DE RIESGO
 # ==============================================================================
 def gen_fig_4_7():
-    labels = ['Bajo Riesgo (🟢)', 'Medio Riesgo (🟡)', 'Alto Riesgo (🔴)']
+    labels = ['Bajo Riesgo', 'Medio Riesgo', 'Alto Riesgo']
     sizes = [1095, 16, 7]
     colors = ['#10B981', '#F59E0B', '#EF4444']
     
-    fig, ax = plt.subplots(figsize=(6.5, 5), dpi=300)
+    fig, ax = plt.subplots(figsize=(6.5, 4.5), dpi=300)
     wedges, texts, autotexts = ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors,
                                       wedgeprops=dict(width=0.4, edgecolor='white', linewidth=2),
                                       textprops=dict(size=10, weight='bold'))
@@ -297,11 +284,10 @@ def gen_fig_4_7():
         autotext.set_color('white')
         autotext.set_fontsize(10)
         
-    ax.set_title("Figura 4.7: Distribución Proporcional de Estudiantes por Nivel de Riesgo", fontsize=13, pad=12, weight='bold', color='#1E293B')
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_4_7_distribucion_riesgo_estudiantes.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_4_7_distribucion_riesgo_estudiantes.png")
+    print("Generated fig_4_7_distribucion_riesgo_estudiantes.png (Clean title)")
 
 
 if __name__ == "__main__":
@@ -315,4 +301,4 @@ if __name__ == "__main__":
     gen_fig_4_5()
     gen_fig_4_6()
     gen_fig_4_7()
-    print("All statistical and diagrammatic figures generated cleanly!")
+    print("All statistical and diagrammatic figures re-generated without figure titles inside image!")
