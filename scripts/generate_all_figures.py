@@ -271,23 +271,30 @@ def gen_fig_4_6():
 # FIGURA 4.7: DISTRIBUCIÓN DE NIVELES DE RIESGO
 # ==============================================================================
 def gen_fig_4_7():
-    labels = ['Bajo Riesgo', 'Medio Riesgo', 'Alto Riesgo']
-    sizes = [1095, 16, 7]
+    categories = ['Bajo Riesgo', 'Medio Riesgo', 'Alto Riesgo']
+    counts = [1095, 16, 7]
+    percentages = [97.94, 1.43, 0.63]
     colors = ['#10B981', '#F59E0B', '#EF4444']
     
-    fig, ax = plt.subplots(figsize=(6.5, 4.5), dpi=300)
-    wedges, texts, autotexts = ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors,
-                                      wedgeprops=dict(width=0.4, edgecolor='white', linewidth=2),
-                                      textprops=dict(size=10, weight='bold'))
+    fig, ax = plt.subplots(figsize=(8, 4.5), dpi=300)
+    bars = ax.bar(categories, counts, color=colors, width=0.45, edgecolor='none')
     
-    for autotext in autotexts:
-        autotext.set_color('white')
-        autotext.set_fontsize(10)
+    for bar, count, pct in zip(bars, counts, percentages):
+        h = bar.get_height()
+        # Colocar etiquetas sobre las barras con texto contrastante en gris oscuro
+        ax.text(bar.get_x() + bar.get_width()/2, h + 20, f"N = {count:,}\n({pct:.2f}%)", 
+                ha='center', va='bottom', fontsize=10, weight='bold', color='#0F172A')
         
+    ax.set_ylim(0, 1300)
+    ax.set_ylabel("Número de Estudiantes (N)", fontsize=11, weight='bold')
+    ax.set_xlabel("Nivel de Riesgo Pedagógico Categorizado", fontsize=11, weight='bold')
+    ax.grid(axis='y', linestyle='--', alpha=0.5)
+    
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_4_7_distribucion_riesgo_estudiantes.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_4_7_distribucion_riesgo_estudiantes.png (Clean title)")
+    print("Generated fig_4_7_distribucion_riesgo_estudiantes.png (High Contrast Bar Chart)")
+
 
 
 if __name__ == "__main__":
