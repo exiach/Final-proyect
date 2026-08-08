@@ -43,103 +43,162 @@ nombres_materias = {
 # FIGURA 3.1: FLUJOGRAMA METODOLÓGICO CRISP-DM ADAPTADO
 # ==============================================================================
 def gen_fig_3_1():
-    fig, ax = plt.subplots(figsize=(10, 5.5), dpi=300)
+    fig, ax = plt.subplots(figsize=(12, 7), dpi=300)
     ax.axis('off')
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 6)
     
     phases = [
-        ("1. Comprensión del Negocio", "Definición de rezago (nota < 51)\ny entorno U.E. Santiváñez", "#1E3A8A"),
-        ("2. Comprensión de Datos", "Consolidación de 36 boletines PDF\ny 1,118 registros de primaria", "#2563EB"),
-        ("3. Preparación de Datos", "Limpieza de nulos, feature shift\n(prev/next) e imputación", "#3B82F6"),
-        ("4. Modelado Predictivo", "Entrenamiento Decision Tree, RF\n(class_weight='balanced') y MLP", "#0284C7"),
-        ("5. Evaluación & Segregación", "Partición estratificada, matrices\ny umbrales Alto/Medio/Bajo", "#0D9488"),
-        ("6. Despliegue de Prototipo", "Aplicación web Streamlit con\nCapa Híbrida de Resguardo", "#059669")
+        ("Fase 1: Comprensión del Negocio", "Definición del rezago (nota < 51)\ny contexto U.E. Santiváñez", "#1E3A8A", (0.5, 3.8)),
+        ("Fase 2: Comprensión de Datos", "Consolidación de 36 boletines PDF\ny 1,118 registros históricos", "#2563EB", (3.6, 3.8)),
+        ("Fase 3: Preparación de Datos", "Limpieza de nulos, feature shift\n(prev/next) e imputación", "#3B82F6", (6.7, 3.8)),
+        ("Fase 6: Despliegue de Prototipo", "Aplicación web Streamlit con\nCapa Híbrida de Resguardo", "#059669", (0.5, 0.8)),
+        ("Fase 5: Evaluación & Segregación", "Partición estratificada, matrices\ny umbrales Alto/Medio/Bajo", "#0D9488", (3.6, 0.8)),
+        ("Fase 4: Modelado Predictivo", "Entrenamiento Decision Tree, RF\n(class_weight='balanced') y MLP", "#0284C7", (6.7, 0.8))
     ]
     
-    for i, (title, desc, color) in enumerate(phases):
-        row = i // 2
-        col = i % 2
-        x = 0.05 + col * 0.48
-        y = 0.70 - row * 0.30
+    for title, desc, color, (x, y) in phases:
+        # Container Box
+        box = mpatches.FancyBboxPatch((x, y), 2.8, 1.6, boxstyle="round,pad=0.04", 
+                                      ec=color, fc='#F8FAFC', lw=2)
+        ax.add_patch(box)
         
-        rect = mpatches.FancyBboxPatch((x, y), 0.42, 0.22, boxstyle="round,pad=0.03", 
-                                       ec=color, fc=color, alpha=0.1, lw=2)
-        ax.add_patch(rect)
+        # Header Banner
+        banner = mpatches.FancyBboxPatch((x, y + 1.15), 2.8, 0.45, boxstyle="round,pad=0.01", 
+                                         ec=color, fc=color, lw=1)
+        ax.add_patch(banner)
         
-        title_box = mpatches.FancyBboxPatch((x, y + 0.15), 0.42, 0.07, boxstyle="round,pad=0.01", 
-                                            ec=color, fc=color, lw=1)
-        ax.add_patch(title_box)
-        
-        ax.text(x + 0.21, y + 0.185, title, color='white', weight='bold', fontsize=11, ha='center', va='center')
-        ax.text(x + 0.21, y + 0.07, desc, color='#1F2937', fontsize=9.5, ha='center', va='center')
-        
+        # Text
+        ax.text(x + 1.4, y + 1.37, title, color='white', weight='bold', fontsize=10, ha='center', va='center')
+        ax.text(x + 1.4, y + 0.60, desc, color='#0F172A', fontsize=9.5, ha='center', va='center', multialignment='center')
+
+    # Connecting Arrows for CRISP-DM Cycle
+    # Top row left-to-right
+    ax.annotate('', xy=(3.5, 4.6), xytext=(3.4, 4.6), arrowprops=dict(arrowstyle="->", color="#475569", lw=2.5))
+    ax.annotate('', xy=(6.6, 4.6), xytext=(6.5, 4.6), arrowprops=dict(arrowstyle="->", color="#475569", lw=2.5))
+    
+    # Right side top-to-bottom
+    ax.annotate('', xy=(8.1, 2.5), xytext=(8.1, 3.7), arrowprops=dict(arrowstyle="->", color="#475569", lw=2.5))
+    
+    # Bottom row right-to-left
+    ax.annotate('', xy=(6.5, 1.6), xytext=(6.6, 1.6), arrowprops=dict(arrowstyle="->", color="#475569", lw=2.5))
+    ax.annotate('', xy=(3.4, 1.6), xytext=(3.5, 1.6), arrowprops=dict(arrowstyle="->", color="#475569", lw=2.5))
+    
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_3_1_flujograma_crisp_dm.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_3_1_flujograma_crisp_dm.png (Clean title)")
+    print("Generated fig_3_1_flujograma_crisp_dm.png (Redesigned)")
 
 # ==============================================================================
 # FIGURA 3.2: ARQUITECTURA DE SOFTWARE DEL PROTOTIPO
 # ==============================================================================
 def gen_fig_3_2():
-    fig, ax = plt.subplots(figsize=(11, 5.5), dpi=300)
+    fig, ax = plt.subplots(figsize=(13, 6), dpi=300)
     ax.axis('off')
+    ax.set_xlim(0, 13)
+    ax.set_ylim(0, 6)
     
     components = [
-        ("Capa de Datos", "data/03_Datasets_Procesados/\nprimaria_dataset.csv", "#64748B", 0.05, 0.4),
-        ("Capa de Modelos ML", "modelos_entrenados/\n(Random Forest & MLP .pkl)", "#0EA5E9", 0.28, 0.4),
-        ("Motor Predictivo Híbrido", "src/predictor.py\n(ML + Resguardo Pedagógico)", "#8B5CF6", 0.51, 0.4),
-        ("Interfaz Streamlit", "src/ui/ (Monitoreo, Ficha\ny Simulador Libre)", "#10B981", 0.74, 0.4)
+        ("1. Capa de Datos", "data/03_Datasets_Procesados/\nprimaria_dataset.csv\n(1,118 registros)", "#475569", 0.4),
+        ("2. Modelos ML (.pkl)", "Random Forest (RF)\nRed Neuronal (MLP)\nScaler (StandardScaler)", "#0EA5E9", 3.6),
+        ("3. Motor Híbrido", "src/predictor.py\n(ML Inference +\nResguardo Normativo)", "#8B5CF6", 6.8),
+        ("4. Interfaz Streamlit", "src/ui/\n(Tab 1: Monitoreo\nTab 2: Ficha Estudiante\nTab 3: Simulador Libre)", "#10B981", 10.0)
     ]
     
-    for title, desc, color, x, y in components:
-        rect = mpatches.FancyBboxPatch((x, y), 0.20, 0.35, boxstyle="round,pad=0.03", ec=color, fc=color, alpha=0.12, lw=2)
-        ax.add_patch(rect)
+    for title, desc, color, x in components:
+        # Container Box
+        box = mpatches.FancyBboxPatch((x, 1.2), 2.6, 3.6, boxstyle="round,pad=0.05", 
+                                      ec=color, fc='#F8FAFC', lw=2)
+        ax.add_patch(box)
         
-        header = mpatches.FancyBboxPatch((x, y + 0.25), 0.20, 0.10, boxstyle="round,pad=0.01", ec=color, fc=color, lw=1)
-        ax.add_patch(header)
+        # Header Banner
+        banner = mpatches.FancyBboxPatch((x, 4.0), 2.6, 0.8, boxstyle="round,pad=0.01", 
+                                         ec=color, fc=color, lw=1)
+        ax.add_patch(banner)
         
-        ax.text(x + 0.10, y + 0.30, title, color='white', weight='bold', fontsize=10, ha='center', va='center')
-        ax.text(x + 0.10, y + 0.12, desc, color='#0F172A', fontsize=9, ha='center', va='center')
+        # Text inside
+        ax.text(x + 1.3, 4.4, title, color='white', weight='bold', fontsize=11, ha='center', va='center')
+        ax.text(x + 1.3, 2.6, desc, color='#0F172A', fontsize=10, ha='center', va='center', multialignment='center', linespacing=1.4)
         
-    for x_arrow in [0.255, 0.485, 0.715]:
-        ax.annotate('', xy=(x_arrow + 0.02, 0.57), xytext=(x_arrow - 0.005, 0.57),
-                    arrowprops=dict(arrowstyle="->", color="#334155", lw=2.5))
+    # Flow Arrows between stages
+    for x_arrow in [3.1, 6.3, 9.5]:
+        ax.annotate('', xy=(x_arrow + 0.45, 3.0), xytext=(x_arrow - 0.05, 3.0),
+                    arrowprops=dict(arrowstyle="->", color="#334155", lw=3.0))
         
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_3_2_arquitectura_software.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_3_2_arquitectura_software.png (Clean title)")
+    print("Generated fig_3_2_arquitectura_software.png (Redesigned)")
 
 # ==============================================================================
 # FIGURA 3.3: FLUJO DE LA CAPA DE RESGUARDO PEDAGÓGICO
 # ==============================================================================
 def gen_fig_3_3():
-    fig, ax = plt.subplots(figsize=(10, 6), dpi=300)
+    fig, ax = plt.subplots(figsize=(13, 8.5), dpi=300)
     ax.axis('off')
+    ax.set_xlim(0, 13)
+    ax.set_ylim(0, 9)
     
-    boxes = [
-        ("Entrada Estudiante", "Promedio General & N° Materias Reprobadas", 0.35, 0.80, "#3B82F6"),
-        ("Inferencia Modelo ML", "Calcula Probabilidad Base P_ML (RF / MLP)", 0.35, 0.62, "#8B5CF6"),
-        ("Evaluación de Reglas de Resguardo", "¿Promedio < 51 ó Reprobadas >= 2?", 0.35, 0.42, "#F59E0B"),
-        ("SI: Ajuste Normativo", "P_final = max(P_ML, 0.85) -> ALTO RIESGO", 0.05, 0.20, "#EF4444"),
-        ("NO: Evaluación Secundaria", "¿Reprobadas == 1 ó 51 <= Prom < 60?", 0.65, 0.42, "#3B82F6"),
-        ("SI: Alerta Media", "P_final = max(P_ML, 0.50) -> MEDIO RIESGO", 0.45, 0.20, "#F59E0B"),
-        ("NO: Salida Estándar", "P_final = P_ML -> BAJO RIESGO", 0.75, 0.20, "#10B981")
-    ]
+    # 1. Start Node
+    box_start = mpatches.FancyBboxPatch((4.2, 7.3), 4.6, 1.1, boxstyle="round,pad=0.04", ec="#2563EB", fc="#EFF6FF", lw=2)
+    ax.add_patch(box_start)
+    ax.text(6.5, 7.85, "Entrada del Estudiante\n(Promedio General & N° Materias Reprobadas)", ha='center', va='center', weight='bold', color='#1E3A8A', fontsize=10.5)
     
-    for title, desc, x, y, color in boxes:
-        w, h = (0.30, 0.12)
-        rect = mpatches.FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.02", ec=color, fc=color, alpha=0.15, lw=2)
-        ax.add_patch(rect)
-        hdr = mpatches.FancyBboxPatch((x, y + h - 0.04), w, 0.04, boxstyle="round,pad=0.005", ec=color, fc=color)
-        ax.add_patch(hdr)
-        ax.text(x + w/2, y + h - 0.02, title, color='white', weight='bold', fontsize=9, ha='center', va='center')
-        ax.text(x + w/2, y + (h-0.04)/2, desc, color='#0F172A', fontsize=8.5, ha='center', va='center')
+    # 2. ML Inference Node
+    box_ml = mpatches.FancyBboxPatch((4.2, 5.5), 4.6, 1.1, boxstyle="round,pad=0.04", ec="#8B5CF6", fc="#F5F3FF", lw=2)
+    ax.add_patch(box_ml)
+    ax.text(6.5, 6.05, "Inferencia de Modelo Machine Learning\n(Calcula Probabilidad Base P_ML)", ha='center', va='center', weight='bold', color='#5B21B6', fontsize=10.5)
+    
+    # Arrow Start -> ML
+    ax.annotate('', xy=(6.5, 6.6), xytext=(6.5, 7.3), arrowprops=dict(arrowstyle="->", color="#334155", lw=2.5))
+    
+    # 3. Decision Node 1
+    box_d1 = mpatches.FancyBboxPatch((3.8, 3.6), 5.4, 1.3, boxstyle="round,pad=0.04", ec="#F59E0B", fc="#FFFBEB", lw=2.5)
+    ax.add_patch(box_d1)
+    ax.text(6.5, 4.25, "¿Promedio < 51.0  Ó  N° Reprobadas ≥ 2?", ha='center', va='center', weight='bold', color='#92400E', fontsize=11)
+    
+    # Arrow ML -> D1
+    ax.annotate('', xy=(6.5, 4.9), xytext=(6.5, 5.5), arrowprops=dict(arrowstyle="->", color="#334155", lw=2.5))
+    
+    # YES Branch (Left) -> ALTO RIESGO
+    ax.annotate('', xy=(2.0, 2.7), xytext=(4.2, 3.6), arrowprops=dict(arrowstyle="->", color="#EF4444", lw=2.5))
+    ax.text(2.6, 3.3, "SÍ", color='#DC2626', weight='bold', fontsize=12)
+    
+    box_alto = mpatches.FancyBboxPatch((0.5, 1.0), 3.0, 1.7, boxstyle="round,pad=0.04", ec="#EF4444", fc="#FEF2F2", lw=2.5)
+    ax.add_patch(box_alto)
+    ax.text(2.0, 1.85, "🔴 ALTO RIESGO\n\nP_final = max(P_ML, 0.85)\nIntervención Prioritaria", ha='center', va='center', weight='bold', color='#991B1B', fontsize=10.5, linespacing=1.3)
+
+    # NO Branch (Right) -> Decision Node 2
+    ax.annotate('', xy=(6.5, 2.7), xytext=(6.5, 3.6), arrowprops=dict(arrowstyle="->", color="#2563EB", lw=2.5))
+    ax.text(6.7, 3.15, "NO", color='#2563EB', weight='bold', fontsize=12)
+    
+    # 4. Decision Node 2
+    box_d2 = mpatches.FancyBboxPatch((4.3, 1.0), 4.4, 1.7, boxstyle="round,pad=0.04", ec="#3B82F6", fc="#EFF6FF", lw=2)
+    ax.add_patch(box_d2)
+    ax.text(6.5, 1.85, "¿Reprobadas == 1  Ó\n51.0 ≤ Promedio < 60.0?", ha='center', va='center', weight='bold', color='#1E40AF', fontsize=10.5)
+    
+    # Branch 2 YES (Top Right) -> MEDIO RIESGO
+    ax.annotate('', xy=(9.4, 2.6), xytext=(8.7, 2.2), arrowprops=dict(arrowstyle="->", color="#F59E0B", lw=2.5))
+    ax.text(9.0, 2.6, "SÍ", color='#D97706', weight='bold', fontsize=11)
+    
+    box_medio = mpatches.FancyBboxPatch((9.4, 2.0), 3.1, 1.5, boxstyle="round,pad=0.04", ec="#F59E0B", fc="#FFFBEB", lw=2.5)
+    ax.add_patch(box_medio)
+    ax.text(10.95, 2.75, "🟡 MEDIO RIESGO\n\nP_final = max(P_ML, 0.50)\nSeguimiento Bimensual", ha='center', va='center', weight='bold', color='#B45309', fontsize=10, linespacing=1.3)
+
+    # Branch 2 NO (Bottom Right) -> BAJO RIESGO
+    ax.annotate('', xy=(9.4, 0.8), xytext=(8.7, 1.3), arrowprops=dict(arrowstyle="->", color="#10B981", lw=2.5))
+    ax.text(9.0, 0.9, "NO", color='#059669', weight='bold', fontsize=11)
+    
+    box_bajo = mpatches.FancyBboxPatch((9.4, 0.1), 3.1, 1.5, boxstyle="round,pad=0.04", ec="#10B981", fc="#ECFDF5", lw=2.5)
+    ax.add_patch(box_bajo)
+    ax.text(10.95, 0.85, "🟢 BAJO RIESGO\n\nP_final = P_ML\nAcompañamiento Estándar", ha='center', va='center', weight='bold', color='#065F46', fontsize=10, linespacing=1.3)
 
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_3_3_capa_hibrida_resguardo.png"), dpi=300, bbox_inches='tight')
     plt.close()
-    print("Generated fig_3_3_capa_hibrida_resguardo.png (Clean title)")
+    print("Generated fig_3_3_capa_hibrida_resguardo.png (Redesigned & Clean)")
+
+
 
 # ==============================================================================
 # FIGURA 4.1: TASA DE REPROBACIÓN POR MATERIA
