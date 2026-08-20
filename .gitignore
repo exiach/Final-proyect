@@ -40,7 +40,7 @@ datasets/
 *.feather
 *.h5
 *.pickle
-*.pkl
+
 
 # =========================
 # ML Models
