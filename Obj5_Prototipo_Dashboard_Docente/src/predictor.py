@@ -58,7 +58,7 @@ def predict_student_risk(
     else:
         input_scaled = scaler.transform(input_data)
         prob = float(mlp_model.predict_proba(input_scaled)[0][1])
-        
+
     # --- CAPA DE RESGUARDO PEDAGÓGICO NORMATIVO (SISTEMA HÍBRIDO) ---
     # Garantiza coherencia pedagógica: promedio < 51 o 2+ reprobadas es Alto Riesgo
     if promedio < MIN_APROBACION_NOTA or reprobadas >= 2:
@@ -76,6 +76,43 @@ def predict_student_risk(
         
     info = PALETA_RIESGO[cat]
     return prob, cat, info["color"], info["badge"], info["rec"]
+
+
+def predict_student_risk_details(
+    promedio: float,
+    reprobadas: int,
+    modelo_nombre: str,
+    rf_model: Any,
+    mlp_model: Any,
+    scaler: Any,
+) -> dict:
+    """Devuelve por separado la inferencia estadística y la decisión híbrida."""
+    input_data = pd.DataFrame({
+        "promedio_general_prev": [promedio],
+        "num_materias_reprobadas_prev": [reprobadas],
+    })
+    if "Random Forest" in modelo_nombre:
+        prob_modelo = float(rf_model.predict_proba(input_data)[0][1])
+    else:
+        prob_modelo = float(mlp_model.predict_proba(scaler.transform(input_data))[0][1])
+    prob_final, cat, color, badge, rec = predict_student_risk(
+        promedio, reprobadas, modelo_nombre, rf_model, mlp_model, scaler
+    )
+    if promedio < MIN_APROBACION_NOTA or reprobadas >= 2:
+        motivo = "Regla pedagógica: promedio < 51 o dos o más materias reprobadas"
+    elif reprobadas == 1 or MIN_APROBACION_NOTA <= promedio < 60:
+        motivo = "Regla preventiva: una materia reprobada o promedio entre 51 y 59.99"
+    else:
+        motivo = "Clasificación basada en la probabilidad del modelo"
+    return {
+        "probabilidad_modelo": prob_modelo,
+        "probabilidad_operativa": prob_final,
+        "nivel_riesgo": cat,
+        "color": color,
+        "badge": badge,
+        "recomendacion": rec,
+        "motivo": motivo,
+    }
 
 
 def enrich_with_predictions(
@@ -101,28 +138,46 @@ def enrich_with_predictions(
     df = df.copy()
     if df.empty:
         df['prob_rezago'] = []
+        df['prob_modelo'] = []
         df['nivel_riesgo'] = []
         df['badge_riesgo'] = []
         df['recomendacion'] = []
+        df['motivo_alerta'] = []
         return df
 
     probs = []
+    probs_modelo = []
     riesgos = []
     badges = []
     recs = []
+    motivos = []
     
     for _, row in df.iterrows():
-        prom = float(row['promedio_general']) if ('promedio_general' in row and pd.notnull(row['promedio_general'])) else 60.0
-        reprob = int(row['num_materias_reprobadas']) if ('num_materias_reprobadas' in row and pd.notnull(row['num_materias_reprobadas'])) else 0
-        p, r, _, b, rc = predict_student_risk(prom, reprob, modelo_nombre, rf_model, mlp_model, scaler)
-        probs.append(p)
-        riesgos.append(r)
-        badges.append(b)
-        recs.append(rc)
+        complete = bool(row.get('datos_completos', True))
+        complete = complete and pd.notnull(row.get('promedio_general')) and pd.notnull(row.get('num_materias_reprobadas'))
+        if not complete:
+            info = PALETA_RIESGO["Sin datos"]
+            probs.append(float('nan'))
+            probs_modelo.append(float('nan'))
+            riesgos.append("Sin datos")
+            badges.append(info['badge'])
+            recs.append(info['rec'])
+            motivos.append("Predicción no calculada: faltan una o más calificaciones")
+            continue
+        prom = float(row['promedio_general'])
+        reprob = int(row['num_materias_reprobadas'])
+        detail = predict_student_risk_details(prom, reprob, modelo_nombre, rf_model, mlp_model, scaler)
+        probs.append(detail['probabilidad_operativa'])
+        probs_modelo.append(detail['probabilidad_modelo'])
+        riesgos.append(detail['nivel_riesgo'])
+        badges.append(detail['badge'])
+        recs.append(detail['recomendacion'])
+        motivos.append(detail['motivo'])
 
     df['prob_rezago'] = probs
+    df['prob_modelo'] = probs_modelo
     df['nivel_riesgo'] = riesgos
     df['badge_riesgo'] = badges
     df['recomendacion'] = recs
+    df['motivo_alerta'] = motivos
     return df
-

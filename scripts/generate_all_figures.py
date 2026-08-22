@@ -1,11 +1,15 @@
 import os
 import time
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/final_project_matplotlib")
+os.makedirs(os.environ["MPLCONFIGDIR"], exist_ok=True)
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
+import json
+import joblib
 
 # Set global style for crisp academic publication figures
 plt.style.use('seaborn-v0_8-whitegrid')
@@ -20,6 +24,7 @@ os.makedirs(FIG_DIR, exist_ok=True)
 # Load real dataset
 DATA_PATH = os.path.abspath("data/03_Datasets_Procesados/primaria_dataset.csv")
 dataset = pd.read_csv(DATA_PATH)
+METRICS_PATH = os.path.abspath("resultados_modelos/metricas_modelos.json")
 
 materias = [
     "com_lenguajes", "cs_sociales", "edu_fisica", "edu_musical",
@@ -43,10 +48,10 @@ nombres_materias = {
 # FIGURA 3.1: FLUJOGRAMA METODOLÓGICO CRISP-DM (ESTILO DRAW.IO)
 # ==============================================================================
 def gen_fig_3_1():
-    fig, ax = plt.subplots(figsize=(12, 7.5), dpi=300)
+    fig, ax = plt.subplots(figsize=(7, 10), dpi=300)
     ax.axis('off')
-    ax.set_xlim(0, 12)
-    ax.set_ylim(0, 8)
+    ax.set_xlim(0, 7)
+    ax.set_ylim(0, 10)
     
     # Draw.io Classic Palette: Soft Blue #DAE8FC, Border #6C8EBF
     bg_color = "#DAE8FC"
@@ -54,42 +59,36 @@ def gen_fig_3_1():
     header_color = "#6C8EBF"
     
     phases = [
-        ("1. Comprensión del Negocio", "Definición del rezago (nota < 51)\ny entorno U.E. Santiváñez", (0.6, 5.0)),
-        ("2. Comprensión de Datos", "Consolidación de 36 boletines PDF\ny 1,118 registros de primaria", (4.6, 5.0)),
-        ("3. Preparación de Datos", "Limpieza de nulos, feature shift\n(prev/next) e imputación", (8.6, 5.0)),
-        ("6. Despliegue de Prototipo", "Aplicación web Streamlit con\nCapa Híbrida de Resguardo", (0.6, 1.2)),
-        ("5. Evaluación & Segregación", "Partición estratificada, matrices\ny umbrales Alto/Medio/Bajo", (4.6, 1.2)),
-        ("4. Modelado Predictivo", "Entrenamiento Decision Tree, RF\n(class_weight='balanced') y MLP", (8.6, 1.2))
+        ("1. Comprensión del problema", "Definición operativa del rezago y alcance institucional", 8.35),
+        ("2. Comprensión de los datos", "36 boletines; 1.118 observaciones de 2022–2024", 6.95),
+        ("3. Preparación de los datos", "Control de calidad y transiciones consecutivas T → T+1", 5.55),
+        ("4. Modelado", "Árbol, Random Forest balanceado y MLP escalada", 4.15),
+        ("5. Evaluación", "Entrenamiento 2022→2023 y prueba 2023→2024", 2.75),
+        ("6. Despliegue", "Prototipo Streamlit con regla pedagógica separada", 1.35),
     ]
     
-    for title, desc, (x, y) in phases:
+    for title, desc, y in phases:
+        x = 1.0
         # Draw.io Rounded Process Box
-        box = mpatches.FancyBboxPatch((x, y), 2.8, 1.8, boxstyle="round,pad=0.04", 
+        box = mpatches.FancyBboxPatch((x, y), 5.0, 1.05, boxstyle="round,pad=0.04",
                                       ec=border_color, fc=bg_color, lw=1.8)
         ax.add_patch(box)
         
         # Draw.io Title Header Bar
-        banner = mpatches.FancyBboxPatch((x, y + 1.25), 2.8, 0.55, boxstyle="round,pad=0.01", 
+        banner = mpatches.FancyBboxPatch((x, y + 0.63), 5.0, 0.42, boxstyle="round,pad=0.01",
                                          ec=border_color, fc=header_color, lw=1)
         ax.add_patch(banner)
         
-        ax.text(x + 1.4, y + 1.52, title, color='white', weight='bold', fontsize=10, ha='center', va='center')
-        ax.text(x + 1.4, y + 0.65, desc, color='#1A1A1A', fontsize=9.5, ha='center', va='center', multialignment='center', linespacing=1.3)
+        ax.text(x + 2.5, y + 0.84, title, color='white', weight='bold', fontsize=10, ha='center', va='center')
+        ax.text(x + 2.5, y + 0.31, desc, color='#1A1A1A', fontsize=9.2, ha='center', va='center')
 
-    # Draw.io Connectors (Orthogonal arrows with solid arrowheads)
-    # Top Row
-    ax.annotate('', xy=(4.5, 5.9), xytext=(3.5, 5.9), arrowprops=dict(arrowstyle="-|>", color="#4D4D4D", lw=2, mutation_scale=15))
-    ax.annotate('', xy=(8.5, 5.9), xytext=(7.5, 5.9), arrowprops=dict(arrowstyle="-|>", color="#4D4D4D", lw=2, mutation_scale=15))
-    
-    # Right Drop
-    ax.annotate('', xy=(10.0, 3.1), xytext=(10.0, 4.9), arrowprops=dict(arrowstyle="-|>", color="#4D4D4D", lw=2, mutation_scale=15))
-    
-    # Bottom Row
-    ax.annotate('', xy=(7.5, 2.1), xytext=(8.5, 2.1), arrowprops=dict(arrowstyle="-|>", color="#4D4D4D", lw=2, mutation_scale=15))
-    ax.annotate('', xy=(3.5, 2.1), xytext=(4.5, 2.1), arrowprops=dict(arrowstyle="-|>", color="#4D4D4D", lw=2, mutation_scale=15))
-    
-    # Left Return (CRISP-DM Iterative Loop)
-    ax.annotate('', xy=(2.0, 4.9), xytext=(2.0, 3.1), arrowprops=dict(arrowstyle="-|>", color="#4D4D4D", lw=2, mutation_scale=15, linestyle='--'))
+    for (_, _, current_y), (_, _, next_y) in zip(phases, phases[1:]):
+        ax.annotate('', xy=(3.5, next_y + 1.08), xytext=(3.5, current_y - 0.02),
+                    arrowprops=dict(arrowstyle="-|>", color="#4D4D4D", lw=1.8, mutation_scale=14))
+    ax.annotate('', xy=(0.95, 8.85), xytext=(0.95, 1.85),
+                arrowprops=dict(arrowstyle="-|>", color="#6C8EBF", lw=1.5, linestyle='--',
+                                connectionstyle="arc3,rad=-0.35", mutation_scale=13))
+    ax.text(0.28, 5.25, "Ciclo iterativo", rotation=90, color="#4D4D4D", fontsize=9, va='center')
     
     plt.tight_layout()
     plt.savefig(os.path.join(FIG_DIR, "fig_3_1_flujograma_crisp_dm.png"), dpi=300, bbox_inches='tight')
@@ -106,7 +105,7 @@ def gen_fig_3_2():
     ax.set_ylim(0, 6.5)
     
     components = [
-        ("1. Capa de Datos", "data/03_Datasets_Procesados/\nprimaria_dataset.csv\n(1,118 registros)", "#E1D5E7", "#9673A6", 0.5),
+        ("1. Capa de Datos", "data/03_Datasets_Procesados/\nprimaria_dataset.csv\n(1.118 registros)", "#E1D5E7", "#9673A6", 0.5),
         ("2. Modelos ML (.pkl)", "Random Forest (RF)\nRed Neuronal (MLP)\nScaler (StandardScaler)", "#DAE8FC", "#6C8EBF", 3.7),
         ("3. Motor Híbrido", "src/predictor.py\n(ML Inference +\nResguardo Normativo)", "#FFF2CC", "#D6B656", 6.9),
         ("4. Interfaz Streamlit", "src/ui/\n(Tab 1: Monitoreo\nTab 2: Ficha Estudiante\nTab 3: Simulador Libre)", "#D5E8D4", "#82B366", 10.1)
@@ -245,7 +244,10 @@ def gen_fig_4_1():
 # ==============================================================================
 def gen_fig_4_2():
     fig, ax = plt.subplots(figsize=(7, 4.5), dpi=300)
-    sns.boxplot(x='rezago', y='num_materias_reprobadas', data=dataset, ax=ax, palette=['#10B981', '#EF4444'], width=0.4)
+    sns.boxplot(
+        x='rezago', y='num_materias_reprobadas', hue='rezago', data=dataset,
+        ax=ax, palette=['#10B981', '#EF4444'], width=0.4, legend=False
+    )
     
     ax.set_xticks([0, 1])
     ax.set_xticklabels(['Sin Rezago (0)', 'Con Rezago (1)'], fontsize=11, weight='bold')
@@ -328,8 +330,10 @@ def gen_fig_4_5():
 def gen_fig_4_6():
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 3.8), dpi=300)
     
-    cm_rf = np.array([[49, 1], [1, 0]])
-    cm_mlp = np.array([[50, 0], [1, 0]])
+    with open(METRICS_PATH, encoding="utf-8") as stream:
+        evaluation = json.load(stream)["evaluacion"]
+    cm_rf = np.array(evaluation["random_forest"]["confusion_matrix"])
+    cm_mlp = np.array(evaluation["mlp"]["confusion_matrix"])
     
     sns.heatmap(cm_rf, annot=True, fmt='d', cmap='Blues', cbar=False, ax=ax1,
                 xticklabels=['Pred No Rezago', 'Pred Rezago'], yticklabels=['No Rezago', 'Rezago'])
@@ -348,10 +352,24 @@ def gen_fig_4_6():
 # FIGURA 4.7: DISTRIBUCIÓN DE NIVELES DE RIESGO
 # ==============================================================================
 def gen_fig_4_7():
-    categories = ['Bajo Riesgo', 'Medio Riesgo', 'Alto Riesgo']
-    counts = [1095, 16, 7]
-    percentages = [97.94, 1.43, 0.63]
-    colors = ['#10B981', '#F59E0B', '#EF4444']
+    rf = joblib.load(os.path.abspath("modelos_entrenados/random_forest_model.pkl"))
+    X = dataset[["promedio_general", "num_materias_reprobadas"]].copy()
+    X.columns = ["promedio_general_prev", "num_materias_reprobadas_prev"]
+    valid = X.notna().all(axis=1)
+    prob = pd.Series(np.nan, index=dataset.index)
+    prob.loc[valid] = rf.predict_proba(X.loc[valid])[:, 1]
+    prob.loc[valid & ((X["promedio_general_prev"] < 51) | (X["num_materias_reprobadas_prev"] >= 2))] = np.maximum(
+        prob.loc[valid & ((X["promedio_general_prev"] < 51) | (X["num_materias_reprobadas_prev"] >= 2))], 0.85
+    )
+    medium_rule = valid & ((X["num_materias_reprobadas_prev"] == 1) | X["promedio_general_prev"].between(51, 60, inclusive="left"))
+    prob.loc[medium_rule] = np.maximum(prob.loc[medium_rule], 0.50)
+    levels = pd.cut(prob, bins=[-np.inf, 0.40, 0.70, np.inf], right=False, labels=['Bajo Riesgo', 'Medio Riesgo', 'Alto Riesgo'])
+    levels = levels.astype(object).where(valid, 'Sin datos')
+    categories = ['Bajo Riesgo', 'Medio Riesgo', 'Alto Riesgo', 'Sin datos']
+    count_series = levels.value_counts().reindex(categories, fill_value=0)
+    counts = count_series.astype(int).tolist()
+    percentages = (count_series / count_series.sum() * 100).tolist()
+    colors = ['#10B981', '#F59E0B', '#EF4444', '#94A3B8']
     
     fig, ax = plt.subplots(figsize=(8, 4.5), dpi=300)
     bars = ax.bar(categories, counts, color=colors, width=0.45, edgecolor='none')
@@ -362,7 +380,7 @@ def gen_fig_4_7():
         ax.text(bar.get_x() + bar.get_width()/2, h + 20, f"N = {count:,}\n({pct:.2f}%)", 
                 ha='center', va='bottom', fontsize=10, weight='bold', color='#0F172A')
         
-    ax.set_ylim(0, 1300)
+    ax.set_ylim(0, max(counts) * 1.18)
     ax.set_ylabel("Número de Estudiantes (N)", fontsize=11, weight='bold')
     ax.set_xlabel("Nivel de Riesgo Pedagógico Categorizado", fontsize=11, weight='bold')
     ax.grid(axis='y', linestyle='--', alpha=0.5)

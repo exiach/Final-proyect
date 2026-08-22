@@ -2,7 +2,7 @@
 
 ## 4.1 Resultados de la Consolidación y Depuración del Dataset (OE1)
 
-La ejecución del pipeline de recolección y limpieza ([Obj1_Recoleccion_Limpieza.ipynb](file:///Users/danielcanqui/Projects/Final_Project/notebooks/Obj1_Recoleccion_Limpieza.ipynb)) permitió consolidar de forma exitosa los registros históricos de la U.E. José María Santiváñez correspondientes a las gestiones 2021, 2022, 2023 y 2024.
+La ejecución del pipeline de recolección y limpieza permitió consolidar los registros históricos de la U.E. José María Santiváñez correspondientes a 2022, 2023 y 2024.
 
 ### 4.1.1 Caracterización del Dataset Consolidado
 
@@ -10,7 +10,7 @@ El conjunto de datos procesado (`primaria_dataset.csv`) contiene un total de **1
 
 | Variable                               | Tipo de Dato         | Descripción                                      | Valores / Rango                        |
 | :------------------------------------- | :------------------- | :----------------------------------------------- | :------------------------------------- |
-| `gestion`                              | Entero (`int64`)     | Año académico de la evaluación                   | 2021, 2022, 2023, 2024                 |
+| `gestion`                              | Entero (`int64`)     | Año académico de la evaluación                   | 2022, 2023, 2024                       |
 | `anio_escolaridad`                     | Texto (`object`)     | Grado escolar                                    | PRIMERO a SEXTO de Primaria            |
 | `paralelo`                             | Texto (`object`)     | Sección de aula                                  | A, B                                   |
 | `rude`                                 | Texto (`object`)     | Código Registro Único de Estudiante              | Código alfanumérico único              |
@@ -52,7 +52,7 @@ Al calcular la frecuencia relativa de reprobación (nota $< 51.0$) en cada una d
 
 ### 4.2.2 Análisis de Comportamiento Académico por Grupo
 
-Al contrastar los promedios académicos de los estudiantes sin rezago ($rezago=0$) frente a los estudiantes en rezago ($rezago=1$), se observan diferencias estadísticamente significativas:
+Al contrastar descriptivamente los promedios de estudiantes sin rezago ($rezago=0$) y con rezago ($rezago=1$), se observaron las siguientes diferencias. No se afirma significancia estadística porque no se aplicó una prueba inferencial:
 
 | Asignatura               | Promedio Sin Rezago ($rezago=0$) | Promedio Con Rezago ($rezago=1$) | Brecha Académica (Puntos) |
 | :----------------------- | :------------------------------: | :------------------------------: | :-----------------------: |
@@ -76,43 +76,29 @@ Asimismo, la cantidad promedio de materias reprobadas en los estudiantes del gru
 
 Los experimentos predictivos implementados en [Obj3a_Entrenamiento_Arboles_RF.ipynb](file:///Users/danielcanqui/Projects/Final_Project/notebooks/Obj3a_Entrenamiento_Arboles_RF.ipynb) y [Obj3b_Entrenamiento_Redes_Neuronales.ipynb](file:///Users/danielcanqui/Projects/Final_Project/notebooks/Obj3b_Entrenamiento_Redes_Neuronales.ipynb) evaluaron tres algoritmos supervisados sobre las características históricas del año previo (`promedio_general_prev`, `num_materias_reprobadas_prev`) para predecir el rezago futuro (`rezago_next`).
 
-### 4.3.1 Resumen de Hiperparámetros de los Modelos Evaluados
+### 4.3.1 Muestra longitudinal y evaluación temporal
+
+Se obtuvieron 489 transiciones consecutivas T→T+1 con datos completos en ambas gestiones, con seis resultados positivos. Se excluyeron 33 pares con etiqueta objetivo incompleta. El entrenamiento utilizó 241 transiciones 2022→2023 (tres positivas) y la prueba temporal 248 transiciones 2023→2024 (tres positivas).
+
+### 4.3.2 Hiperparámetros de los modelos evaluados
 
 | Modelo                | Algoritmo Base           | Hiperparámetros Principales                                                                            | Preprocesamiento      |
 | :-------------------- | :----------------------- | :----------------------------------------------------------------------------------------------------- | :-------------------- |
-| **Árbol de Decisión** | `DecisionTreeClassifier` | `max_depth=4`, `random_state=42`                                                                       | Ninguno (Sin escalar) |
-| **Random Forest**     | `RandomForestClassifier` | `n_estimators=200`, `max_depth=5`, `class_weight='balanced'`, `random_state=42`                        | Ninguno (Sin escalar) |
-| **Red Neuronal MLP**  | `MLPClassifier`          | `hidden_layer_sizes=(10, 10)`, `activation='relu'`, `solver='adam'`, `max_iter=500`, `random_state=42` | `StandardScaler`      |
+| **Árbol de Decisión** | `DecisionTreeClassifier` | `max_depth=3`, `min_samples_leaf=10`, `class_weight='balanced'`, `random_state=42` | Ninguno |
+| **Random Forest** | `RandomForestClassifier` | `n_estimators=300`, `max_depth=4`, `min_samples_leaf=5`, `class_weight='balanced'`, `random_state=42` | Ninguno |
+| **Red Neuronal MLP** | `MLPClassifier` | `hidden_layer_sizes=(4,)`, `alpha=0.1`, `learning_rate_init=0.0001`, `max_iter=1000`, `random_state=42` | `StandardScaler` |
 
-### 4.3.2 Rendimiento Cuantitativo sobre el Conjunto de Prueba Filtrado (N=51)
+### 4.3.3 Rendimiento en la prueba temporal 2023→2024 (N=248)
 
-```text
-Reporte de Clasificación (Random Forest Balanceado):
-              precision    recall  f1-score   support
+| Modelo | Matriz de confusión | Precision rezago | Recall rezago | F1 rezago | Balanced accuracy |
+|---|---|---:|---:|---:|---:|
+| Árbol de decisión | `[[232, 13], [2, 1]]` | 0,0714 | 0,3333 | 0,1176 | 0,6401 |
+| Random Forest | `[[232, 13], [2, 1]]` | 0,0714 | 0,3333 | 0,1176 | 0,6401 |
+| MLP | `[[245, 0], [3, 0]]` | 0 | 0 | 0 | 0,5000 |
 
-         0.0       0.98      0.98      0.98        50
-         1.0       0.00      0.00      0.00         1
+**Interpretación**: Árbol y Random Forest detectaron uno de tres casos positivos, con 13 falsas alarmas. La MLP no detectó positivos. La evidencia no permite declarar un modelo superior ni afirmar alta precisión. La regla pedagógica se presenta como salvaguarda operativa separada, no como mejora estadística.
 
-    accuracy                           0.96        51
-   macro avg       0.49      0.49      0.49        51
-weighted avg       0.96      0.96      0.96        51
-```
-
-```text
-Reporte de Clasificación (Red Neuronal MLP):
-              precision    recall  f1-score   support
-
-         0.0       0.98      1.00      0.99        50
-         1.0       0.00      0.00      0.00         1
-
-    accuracy                           0.98        51
-   macro avg       0.49      0.50      0.50        51
-weighted avg       0.96      0.98      0.97        51
-```
-
-**Análisis Técnico del Rendimiento**: Debido a la extrema escasez de casos positivos en la muestra de prueba filtrada ($N_{\text{test}}=51$, con solo 1 caso positivo de rezago continuo), los modelos estadísticos puros presentan dificultades para activar el umbral probabilístico por defecto de 0.50 sin generar falsos positivos. Este resultado empírico justificó plenamente la necesidad de diseñar la **Capa Híbrida de Resguardo Pedagógico Normativo** en el prototipo final.
-
-![Figura 4.6: Matrices de Confusión Comparativas en Conjunto de Prueba Filtrado (N=51)](file:///Users/danielcanqui/Projects/Final_Project/documentacion/figuras/fig_4_6_matriz_confusion_modelos.png)
+![Figura 4.6: Matrices de Confusión en la Prueba Temporal 2023-2024](file:///Users/danielcanqui/Projects/Final_Project/documentacion/figuras/fig_4_6_matriz_confusion_modelos.png)
 
 ---
 
@@ -130,12 +116,14 @@ En [Obj4_Evaluacion_Segregacion_Riesgo.ipynb](file:///Users/danielcanqui/Project
 
 ![Figura 4.7: Distribución Proporcional de Estudiantes por Nivel de Riesgo](file:///Users/danielcanqui/Projects/Final_Project/documentacion/figuras/fig_4_7_distribucion_riesgo_estudiantes.png)
 
+La figura incluye una categoría **Sin datos** para las 88 observaciones que no contienen las nueve calificaciones. Esas filas se conservan para trazabilidad descriptiva, pero el prototipo no les asigna probabilidad ni nivel de riesgo hasta completar la información.
+
 ### 4.4.2 Análisis Temporal y Variabilidad por Paralelo
 
 - **Variabilidad por Sección**: Se detectó una ligera diferencia en la proporción histórica de rezago entre secciones: **Paralelo A** ($1.61\%$) frente a **Paralelo B** ($2.51\%$).
-- **Distribución por Gestión**: La proporción de rezago se mantuvo acotada entre $1.5\%$ y $2.8\%$ a lo largo del periodo 2021-2024.
+- **Distribución por Gestión**: La proporción de rezago se mantuvo acotada entre aproximadamente 1,5 % y 2,8 % durante 2022-2024.
 
-![Figura 4.3: Evolución de la Proporción de Rezago Académico (2021-2024)](file:///Users/danielcanqui/Projects/Final_Project/documentacion/figuras/fig_4_3_evolucion_rezago_gestion.png)
+![Figura 4.3: Evolución de la Proporción de Rezago Académico (2022-2024)](file:///Users/danielcanqui/Projects/Final_Project/documentacion/figuras/fig_4_3_evolucion_rezago_gestion.png)
 ![Figura 4.4: Proporción de Rezago Promedio por Grado Escolar](file:///Users/danielcanqui/Projects/Final_Project/documentacion/figuras/fig_4_4_rezago_promedio_curso.png)
 ![Figura 4.5: Evolución Académica Longitudinal de un Estudiante de Ejemplo](file:///Users/danielcanqui/Projects/Final_Project/documentacion/figuras/fig_4_5_trayectoria_estudiante_ejemplo.png)
 
@@ -153,7 +141,7 @@ ESTRUCTURA DE INTERFAZ DEL PROTOTIPO DOCENTE (Streamlit App)
 │   └── Leyenda Institucional de Niveles de Riesgo
 │
 ├── BARRA SUPERIOR DE FILTROS
-│   └── Selección de Modelo ML, Gestión (2021-2025), Grado (1.º a 6.º) y Paralelo (A/B)
+│   └── Selección de Modelo ML, Gestión disponible, Grado (1.º a 6.º) y Paralelo (A/B)
 │
 └── PESTAÑAS PRINCIPALES (st.tabs)
     ├── 📊 Tab 1: Monitoreo de Curso & Alertas Tempranas
@@ -176,14 +164,14 @@ ESTRUCTURA DE INTERFAZ DEL PROTOTIPO DOCENTE (Streamlit App)
 
 ### 4.5.1 Validación Operativa de la Capa de Resguardo Pedagógico
 
-En las pruebas funcionales del prototipo se verificó que la integración de la Capa Híbrida en `src/predictor.py` resuelve exitosamente el 100% de los casos de riesgo real. Por ejemplo, al ingresar un perfil con promedio $< 51.0$ o $\ge 2$ materias reprobadas, la función ajusta automáticamente la probabilidad a $P \ge 0.85$, otorgando de forma inmediata la categoría 🔴 **ALTO RIESGO**, garantizando la utilidad práctica de la herramienta en la gestión escolar.
+Las pruebas unitarias verificaron que la regla programada clasifica como alerta alta todo perfil con promedio menor a 51 o dos o más materias reprobadas. Esto valida la implementación de la regla, pero no representa sensibilidad predictiva ni garantiza detectar todos los casos futuros.
 
 ---
 
 ## 4.6 Discusión de Resultados
 
-Los hallazgos del presente estudio concuerdan con la literatura internacional sobre Minería de Datos Educativos y Sistemas de Alerta Temprana (Aguiar & Morales, 2021; Macfadyen & Dawson, 2010; Romero & Ventura, 2020):
+Los hallazgos se interpretan a la luz de la literatura sobre Minería de Datos Educativos y Sistemas de Alerta Temprana (Macfadyen & Dawson, 2010; Romero & Ventura, 2020):
 
-1. **Factores Predictores de Rezago**: Al igual que en investigaciones previas en educación primaria (De-La-Peña & Luque-Rojas, 2021), las asignaturas fundamentales de lectura y lenguaje junto con matemática constituyen los predictores tempranos más potentes del rendimiento futuro.
-2. **Superación del Desbalance de Datos mediante Enfoques Híbridos**: La literatura advierte que los modelos de Machine Learning puros pueden fallar en datasets escolares altamente desbalanceados si no se aplican técnicas de balanceo o reglas de dominio. La combinación de _Random Forest_ balanceado con la **Capa Híbrida de Resguardo Pedagógico** demostró ser la arquitectura óptima para entornos educativos reales, superando las limitaciones de los clasificadores aislados.
+1. **Materias con mayor reprobación descriptiva**: Comunicación y Lenguajes y Matemática presentaron las tasas más altas en este conjunto. Este resultado describe la institución estudiada, pero no demuestra causalidad ni que cada asignatura sea un predictor independiente.
+2. **Desbalance y enfoque híbrido**: La escasez de eventos limitó a los clasificadores. Las reglas de dominio mejoran la seguridad operativa del prototipo, pero requieren validación prospectiva y no pueden considerarse una arquitectura óptima con la evidencia disponible.
 3. **Rol del Sistema como Apoyo a la Decisión**: El prototipo desarrollado reafirma que la inteligencia artificial aplicada a la educación no busca automatizar ni reemplazar la labor del maestro, sino empoderarlo con información objetiva para anticipar la intervención remedial.

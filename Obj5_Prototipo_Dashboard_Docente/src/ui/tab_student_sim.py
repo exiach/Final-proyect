@@ -63,12 +63,22 @@ def render_tab_student_simulation(
     col_info1, col_info2 = st.columns([1.1, 1.9])
     
     with col_info1:
-        prom_actual = est_row['promedio_general'] if pd.notnull(est_row['promedio_general']) else 60.0
-        reprob_actual = est_row['num_materias_reprobadas'] if pd.notnull(est_row['num_materias_reprobadas']) else 0
-        
-        p_act, r_act, c_act, b_act, rec_act = predict_student_risk(
-            prom_actual, reprob_actual, modelo_seleccionado, rf_model, mlp_model, scaler
-        )
+        historial_completo = bool(est_row.get('datos_completos', True))
+        historial_completo = historial_completo and pd.notnull(est_row['promedio_general']) and pd.notnull(est_row['num_materias_reprobadas'])
+        prom_actual = float(est_row['promedio_general']) if historial_completo else float('nan')
+        reprob_actual = int(est_row['num_materias_reprobadas']) if historial_completo else None
+        if historial_completo:
+            p_act, r_act, c_act, b_act, rec_act = predict_student_risk(
+                prom_actual, reprob_actual, modelo_seleccionado, rf_model, mlp_model, scaler
+            )
+            promedio_texto = f"{prom_actual:.2f} pts"
+            reprobadas_texto = f"{reprob_actual} materia(s)"
+            probabilidad_texto = f"{p_act*100:.1f}%"
+        else:
+            p_act, r_act, c_act = float('nan'), "Sin datos", "#94A3B8"
+            b_act = "⚪ SIN DATOS"
+            rec_act = "Completar las nueve calificaciones antes de emitir una alerta."
+            promedio_texto = reprobadas_texto = probabilidad_texto = "No disponible"
         
         g_next_lbl = str(int(est_row['gestion']) + 1) if str(est_row['gestion']).isdigit() else "Próximo Año"
         
@@ -82,8 +92,8 @@ def render_tab_student_simulation(
                     <div><b>Nombre:</b> <span style="color: #F8FAFC;">{est_row['nombre_completo']}</span></div>
                     <div><b>RUDE:</b> <span style="color: #38BDF8;">{est_row['rude']}</span></div>
                     <div><b>Grado / Paralelo:</b> {est_row['anio_escolaridad']} - '{est_row['paralelo']}'</div>
-                    <div><b>Promedio Base:</b> {prom_actual:.2f} pts</div>
-                    <div><b>Reprobadas Base:</b> {int(reprob_actual)} materia(s)</div>
+                    <div><b>Promedio Base:</b> {promedio_texto}</div>
+                    <div><b>Reprobadas Base:</b> {reprobadas_texto}</div>
                 </div>
                 <hr style="border-color: rgba(255,255,255,0.08); margin: 16px 0;">
                 <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.95rem; font-weight: 700; color: #818CF8; margin-bottom: 8px;">
@@ -91,7 +101,7 @@ def render_tab_student_simulation(
                 </div>
                 <div style="text-align: center; margin: 12px 0;">
                     <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; font-weight: 800; color: {c_act};">{b_act}</span>
-                    <div style="font-size: 0.85rem; color: #94A3B8; margin-top: 4px;">Probabilidad de Rezago: <b>{p_act*100:.1f}%</b></div>
+                    <div style="font-size: 0.85rem; color: #94A3B8; margin-top: 4px;">Puntaje operativo: <b>{probabilidad_texto}</b></div>
                 </div>
                 <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; font-size: 0.82rem; color: #CBD5E1;">
                     💡 <b>Acción Recomendada:</b> {rec_act}
@@ -102,6 +112,8 @@ def render_tab_student_simulation(
         )
 
     with col_info2:
+        if not historial_completo:
+            st.warning("El registro histórico está incompleto. Los valores 60 que aparecen en materias faltantes son solo un punto de partida editable para la simulación; no constituyen una imputación ni una predicción histórica.")
         st.markdown(
             """
             <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1rem; font-weight: 700; color: #F8FAFC; margin-bottom: 8px;">
@@ -152,20 +164,25 @@ def render_tab_student_simulation(
         )
         
         sim_col1, sim_col2, sim_col3 = st.columns(3)
-        delta_prom = nuevo_promedio - prom_actual
-        delta_reprob = nuevas_reprobadas - int(reprob_actual)
-        delta_prob = (p_sim - p_act) * 100
+        delta_prom = nuevo_promedio - prom_actual if historial_completo else None
+        delta_reprob = nuevas_reprobadas - reprob_actual if historial_completo else None
+        delta_prob = (p_sim - p_act) * 100 if historial_completo else None
         
         with sim_col1:
-            st.markdown(render_kpi_card("Nuevo Promedio", f"{nuevo_promedio:.2f} pts", "cyan", f"Diferencia: {delta_prom:+.2f}"), unsafe_allow_html=True)
+            detalle = f"Diferencia: {delta_prom:+.2f}" if historial_completo else "Sin base comparable"
+            st.markdown(render_kpi_card("Nuevo Promedio", f"{nuevo_promedio:.2f} pts", "cyan", detalle), unsafe_allow_html=True)
         with sim_col2:
-            st.markdown(render_kpi_card("Reprobadas", f"{nuevas_reprobadas}", "amber" if nuevas_reprobadas > 0 else "emerald", f"Diferencia: {delta_reprob:+d}"), unsafe_allow_html=True)
+            detalle = f"Diferencia: {delta_reprob:+d}" if historial_completo else "Sin base comparable"
+            st.markdown(render_kpi_card("Reprobadas", f"{nuevas_reprobadas}", "amber" if nuevas_reprobadas > 0 else "emerald", detalle), unsafe_allow_html=True)
         with sim_col3:
-            acc_c = "emerald" if p_sim < p_act else ("rose" if p_sim > p_act else "cyan")
-            st.markdown(render_kpi_card("Nueva Prob. Rezago", f"{p_sim*100:.1f}%", acc_c, f"Cambio: {delta_prob:+.1f}%"), unsafe_allow_html=True)
+            acc_c = "cyan" if not historial_completo else ("emerald" if p_sim < p_act else ("rose" if p_sim > p_act else "cyan"))
+            detalle = f"Cambio: {delta_prob:+.1f}%" if historial_completo else "Simulación sin base histórica"
+            st.markdown(render_kpi_card("Nuevo Puntaje Operativo", f"{p_sim*100:.1f}%", acc_c, detalle), unsafe_allow_html=True)
         
         st.markdown("<div style='margin-top: 16px;'></div>", unsafe_allow_html=True)
-        if p_sim < p_act:
+        if not historial_completo:
+            st.info(f"Resultado simulado: **{r_sim}** ({b_sim}). {rec_sim}")
+        elif p_sim < p_act:
             st.success(f"🎉 **¡Mejora Proyectada!** El nivel de riesgo se reduce a **{r_sim}** ({b_sim}). {rec_sim}")
         elif p_sim > p_act:
             st.error(f"⚠️ **Alerta:** Las calificaciones simuladas aumentan la probabilidad de rezago a **{r_sim}** ({b_sim}).")

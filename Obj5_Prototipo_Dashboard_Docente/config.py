@@ -37,6 +37,11 @@ ORDEN_GRADOS: List[str] = ["PRIMERO", "SEGUNDO", "TERCERO", "CUARTO", "QUINTO", 
 MIN_APROBACION_NOTA: float = 51.0
 
 PALETA_RIESGO: Dict[str, Dict[str, str]] = {
+    "Sin datos": {
+        "color": "#94A3B8",
+        "badge": "⚪ SIN DATOS",
+        "rec": "Completar las nueve calificaciones antes de emitir una alerta."
+    },
     "Alto Riesgo": {
         "color": "#F43F5E",
         "badge": "🔴 ALTO RIESGO",

@@ -9,8 +9,35 @@ import streamlit as st
 from typing import Optional
 from config import DATA_PATH, SUBJECT_COLS, MIN_APROBACION_NOTA
 
+REQUIRED_META = ['gestion', 'anio_escolaridad', 'paralelo', 'rude']
 
-def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+
+def validate_dataframe(df: pd.DataFrame, allow_missing_notes: bool = False) -> pd.DataFrame:
+    """Valida esquema, identificadores y dominio de las calificaciones."""
+    if df.empty:
+        raise ValueError("El archivo no contiene registros.")
+    missing = [c for c in REQUIRED_META + SUBJECT_COLS if c not in df.columns]
+    if missing:
+        raise ValueError(f"Faltan columnas obligatorias: {', '.join(missing)}")
+    checked = df.copy()
+    for col in SUBJECT_COLS:
+        checked[col] = pd.to_numeric(checked[col], errors='coerce')
+    invalid_numeric = checked[SUBJECT_COLS].isna().any(axis=1)
+    if invalid_numeric.any() and not allow_missing_notes:
+        rows = (invalid_numeric[invalid_numeric].index + 2).tolist()[:10]
+        raise ValueError(f"Hay notas vacías o no numéricas en filas: {rows}")
+    invalid_range = ((checked[SUBJECT_COLS] < 0) | (checked[SUBJECT_COLS] > 100)).any(axis=1)
+    if invalid_range.any():
+        rows = (invalid_range[invalid_range].index + 2).tolist()[:10]
+        raise ValueError(f"Hay notas fuera del rango 0-100 en filas: {rows}")
+    if checked['rude'].isna().any() or checked['rude'].astype(str).str.strip().eq('').any():
+        raise ValueError("Todos los registros deben incluir un RUDE seudonimizado válido.")
+    if checked.duplicated(['rude', 'gestion']).any():
+        raise ValueError("Existen registros duplicados para la combinación RUDE-gestión.")
+    return checked
+
+
+def process_dataframe(df: pd.DataFrame, allow_missing_notes: bool = False) -> pd.DataFrame:
     """
     Procesa, valida y estandariza las columnas necesarias en el dataset de estudiantes.
     
@@ -20,7 +47,7 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: DataFrame procesado con nombre_completo, promedio y reprobadas calculadas.
     """
-    df = df.copy()
+    df = validate_dataframe(df, allow_missing_notes=allow_missing_notes)
     
     # Formatear nombre completo
     paterno = df['paterno'].fillna('') if 'paterno' in df.columns else pd.Series([''] * len(df))
@@ -34,21 +61,23 @@ def process_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     # Validar y calcular métricas académicas de materias presentes
     subjs_present = [col for col in SUBJECT_COLS if col in df.columns]
     if subjs_present:
-        if 'promedio_general' not in df.columns or df['promedio_general'].isnull().all():
-            df['promedio_general'] = df[subjs_present].mean(axis=1)
-        if 'num_materias_reprobadas' not in df.columns or df['num_materias_reprobadas'].isnull().all():
-            df['num_materias_reprobadas'] = (df[subjs_present] < MIN_APROBACION_NOTA).sum(axis=1)
+        complete_notes = df[subjs_present].notna().all(axis=1)
+        calculated_average = df[subjs_present].mean(axis=1).where(complete_notes)
+        calculated_failed = (df[subjs_present] < MIN_APROBACION_NOTA).sum(axis=1).where(complete_notes)
+        if 'promedio_general' not in df.columns:
+            df['promedio_general'] = calculated_average
+        else:
+            df['promedio_general'] = pd.to_numeric(df['promedio_general'], errors='coerce').where(complete_notes)
+            df['promedio_general'] = df['promedio_general'].fillna(calculated_average)
+        if 'num_materias_reprobadas' not in df.columns:
+            df['num_materias_reprobadas'] = calculated_failed
+        else:
+            df['num_materias_reprobadas'] = pd.to_numeric(
+                df['num_materias_reprobadas'], errors='coerce'
+            ).where(complete_notes)
+            df['num_materias_reprobadas'] = df['num_materias_reprobadas'].fillna(calculated_failed)
+        df['datos_completos'] = complete_notes
 
-    # Valores por defecto para metadatos requeridos
-    if 'gestion' not in df.columns:
-        df['gestion'] = 2025
-    if 'anio_escolaridad' not in df.columns:
-        df['anio_escolaridad'] = 'PRIMERO'
-    if 'paralelo' not in df.columns:
-        df['paralelo'] = 'A'
-    if 'rude' not in df.columns:
-        df['rude'] = [f"RUDE-{i+1}" for i in range(len(df))]
-        
     return df
 
 
@@ -62,7 +91,8 @@ def load_base_data() -> Optional[pd.DataFrame]:
     """
     if os.path.exists(DATA_PATH):
         df = pd.read_csv(DATA_PATH)
-        return process_dataframe(df)
+        # El histórico conserva faltantes reales; se identifican y no se predicen.
+        return process_dataframe(df, allow_missing_notes=True)
     return None
 
 

@@ -1,0 +1,139 @@
+{
+  "metodologia": "Predictores de gestión T y rezago de gestión T+1",
+  "periodo_dataset": [
+    2022,
+    2023,
+    2024
+  ],
+  "n_observaciones_dataset": 1118,
+  "n_estudiantes_unicos": 592,
+  "n_transiciones": 489,
+  "positivos_transiciones": 6,
+  "entrenamiento_temporal": {
+    "transicion": "2022->2023",
+    "n": 241,
+    "positivos": 3
+  },
+  "prueba_temporal": {
+    "transicion": "2023->2024",
+    "n": 248,
+    "positivos": 3
+  },
+  "variables_predictoras": [
+    "promedio_general_prev",
+    "num_materias_reprobadas_prev"
+  ],
+  "evaluacion": {
+    "decision_tree": {
+      "threshold": 0.5,
+      "confusion_matrix": [
+        [
+          232,
+          13
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "balanced_accuracy": 0.6401360544217687,
+      "average_precision": 0.031874039938556066,
+      "precision_rezago": 0.07142857142857142,
+      "recall_rezago": 0.3333333333333333,
+      "f1_rezago": 0.11764705882352941,
+      "support_no_rezago": 245,
+      "support_rezago": 3
+    },
+    "random_forest": {
+      "threshold": 0.5,
+      "confusion_matrix": [
+        [
+          232,
+          13
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "balanced_accuracy": 0.6401360544217687,
+      "average_precision": 0.06362007168458782,
+      "precision_rezago": 0.07142857142857142,
+      "recall_rezago": 0.3333333333333333,
+      "f1_rezago": 0.11764705882352941,
+      "support_no_rezago": 245,
+      "support_rezago": 3
+    },
+    "mlp": {
+      "threshold": 0.5,
+      "confusion_matrix": [
+        [
+          245,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "balanced_accuracy": 0.5,
+      "average_precision": 0.23315363881401616,
+      "precision_rezago": 0.0,
+      "recall_rezago": 0.0,
+      "f1_rezago": 0.0,
+      "support_no_rezago": 245,
+      "support_rezago": 3
+    }
+  },
+  "nota_limitacion": "Solo existen seis transiciones positivas; las métricas son exploratorias y no demuestran generalización a otras cohortes ni eficacia pedagógica.",
+  "modelos_despliegue": {
+    "random_forest": {
+      "bootstrap": true,
+      "ccp_alpha": 0.0,
+      "class_weight": "balanced",
+      "criterion": "gini",
+      "max_depth": 4,
+      "max_features": "sqrt",
+      "max_leaf_nodes": null,
+      "max_samples": null,
+      "min_impurity_decrease": 0.0,
+      "min_samples_leaf": 5,
+      "min_samples_split": 2,
+      "min_weight_fraction_leaf": 0.0,
+      "monotonic_cst": null,
+      "n_estimators": 300,
+      "n_jobs": null,
+      "oob_score": false,
+      "random_state": 42,
+      "verbose": 0,
+      "warm_start": false
+    },
+    "mlp": {
+      "activation": "relu",
+      "alpha": 0.1,
+      "batch_size": "auto",
+      "beta_1": 0.9,
+      "beta_2": 0.999,
+      "early_stopping": false,
+      "epsilon": 1e-08,
+      "hidden_layer_sizes": [
+        4
+      ],
+      "learning_rate": "constant",
+      "learning_rate_init": 0.0001,
+      "max_fun": 15000,
+      "max_iter": 1000,
+      "momentum": 0.9,
+      "n_iter_no_change": 10,
+      "nesterovs_momentum": true,
+      "power_t": 0.5,
+      "random_state": 42,
+      "shuffle": true,
+      "solver": "adam",
+      "tol": 0.0001,
+      "validation_fraction": 0.1,
+      "verbose": false,
+      "warm_start": false
+    }
+  }
+}

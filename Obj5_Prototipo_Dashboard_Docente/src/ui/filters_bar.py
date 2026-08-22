@@ -43,12 +43,12 @@ def render_top_filters_bar(df_data: pd.DataFrame) -> Tuple[str, pd.DataFrame, st
     with col1:
         modelo_seleccionado = st.selectbox(
             "🧠 Modelo Predictivo ML",
-            ["Random Forest (Recomendado)", "Red Neuronal (MLP)"],
-            help="Algoritmo de IA para inferencia de riesgo."
+            ["Random Forest", "Red Neuronal (MLP)"],
+            help="La evaluación disponible es exploratoria; ninguna opción está validada para uso autónomo."
         )
         
     with col2:
-        gestiones = ["Todas"] + sorted(list(df_data['gestion'].dropna().unique().astype(str)), reverse=True)
+        gestiones = sorted(list(df_data['gestion'].dropna().unique().astype(str)), reverse=True)
         sel_gestion = st.selectbox(
             "📅 Gestión Base (Año)",
             gestiones,
@@ -73,22 +73,21 @@ def render_top_filters_bar(df_data: pd.DataFrame) -> Tuple[str, pd.DataFrame, st
         )
 
     # Calcular gestión proyectada/predicha (T+1)
-    if sel_gestion != "Todas" and sel_gestion.isdigit():
+    if sel_gestion.isdigit():
         gestion_predicha = str(int(sel_gestion) + 1)
     else:
         gestion_predicha = "Próximo Año"
 
     # Aplicar filtrado al dataset
     df_filtered = df_data.copy()
-    if sel_gestion != "Todas":
-        df_filtered = df_filtered[df_filtered['gestion'].astype(str) == sel_gestion]
+    df_filtered = df_filtered[df_filtered['gestion'].astype(str) == sel_gestion]
     if sel_grado != "Todos":
         df_filtered = df_filtered[df_filtered['anio_escolaridad'] == sel_grado]
     if sel_paralelo != "Todos":
         df_filtered = df_filtered[df_filtered['paralelo'] == sel_paralelo]
 
     # Banner informativo de contexto seleccionado con estilo Tailwind Cyan Alert Box
-    g_info = f"Gestión Base <b style='color:#38BDF8;'>{sel_gestion}</b> ➔ Alertas <b style='color:#818CF8;'>{gestion_predicha}</b>" if sel_gestion != "Todas" else "Todas las Gestiones Históricas"
+    g_info = f"Gestión Base <b style='color:#38BDF8;'>{sel_gestion}</b> ➔ Alertas <b style='color:#818CF8;'>{gestion_predicha}</b>"
     
     st.markdown(
         f"""

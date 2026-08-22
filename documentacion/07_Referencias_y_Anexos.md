@@ -2,16 +2,37 @@
 
 ## Referencias Bibliográficas (Normas APA 7.ª Edición)
 
-1. Aguiar, E. H., & Morales, L. (2021). Educational Data Mining and Learning Analytics: Applications in early warning systems. *IEEE Transactions on Learning Technologies*, 14(3), 345–358. https://doi.org/10.1109/TLT.2021.3089123
-2. Breiman, L. (2001). Random Forests. *Machine Learning*, 45(1), 5–32. https://doi.org/10.1023/A:1010933404324
-3. Chawla, N. V., Bowyer, K. W., Hall, L. O., & Kegelmeyer, W. P. (2002). SMOTE: Synthetic Minority Over-sampling Technique. *Journal of Artificial Intelligence Research*, 16, 321–357. https://doi.org/10.1613/jair.953
-4. De-La-Peña, C., & Luque-Rojas, M. J. (2021). Niveles de rendimiento académico y factores de riesgo en educación primaria. *Revista de Investigación Educativa*, 39(2), 411–427. https://doi.org/10.6018/rie.434101
-5. Haykin, S. (2009). *Neural Networks and Learning Machines* (3rd ed.). Pearson Education.
-6. Macfadyen, L. P., & Dawson, S. (2010). Mining LMS data to develop an “early warning system” for educators: A case study. *Computers & Education*, 54(2), 588–599. https://doi.org/10.1016/j.compedu.2009.09.008
-7. Ministerio de Educación del Estado Plurinacional de Bolivia. (2021). *Reglamento de evaluación del desarrollo curricular del Sistema Educativo Plurinacional*. La Paz, Bolivia.
-8. Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot, M., & Duchesnay, É. (2011). Scikit-learn: Machine Learning in Python. *Journal of Machine Learning Research*, 12, 2825–2830.
-9. Romero, C., & Ventura, S. (2020). Educational Data Mining and Learning Analytics: An updated survey. *WIREs Data Mining and Knowledge Discovery*, 10(3), e1355. https://doi.org/10.1002/widm.1355
-10. Streamlit Inc. (2024). *Streamlit Documentation: Building interactive data applications in Python*. https://docs.streamlit.io
+Baker, R. S., & Inventado, P. S. (2014). Educational data mining and learning analytics. En J. A. Larusson y B. White (Eds.), *Learning analytics: From research to practice* (pp. 61–75). Springer. https://doi.org/10.1007/978-1-4614-3305-7_4
+
+Breiman, L. (2001). Random forests. *Machine Learning, 45*(1), 5–32. https://doi.org/10.1023/A:1010933404324
+
+Chawla, N. V., Bowyer, K. W., Hall, L. O., & Kegelmeyer, W. P. (2002). SMOTE: Synthetic minority over-sampling technique. *Journal of Artificial Intelligence Research, 16*, 321–357. https://doi.org/10.1613/jair.953
+
+Fawcett, T. (2006). An introduction to ROC analysis. *Pattern Recognition Letters, 27*(8), 861–874. https://doi.org/10.1016/j.patrec.2005.10.010
+
+Goodfellow, I., Bengio, Y., & Courville, A. (2016). *Deep learning*. MIT Press.
+
+Han, J., Kamber, M., & Pei, J. (2012). *Data mining: Concepts and techniques* (3rd ed.). Morgan Kaufmann.
+
+Hastie, T., Tibshirani, R., & Friedman, J. (2009). *The elements of statistical learning* (2nd ed.). Springer. https://doi.org/10.1007/978-0-387-84858-7
+
+Haykin, S. (2009). *Neural networks and learning machines* (3rd ed.). Pearson.
+
+James, G., Witten, D., Hastie, T., & Tibshirani, R. (2013). *An introduction to statistical learning*. Springer. https://doi.org/10.1007/978-1-4614-7138-7
+
+Macfadyen, L. P., & Dawson, S. (2010). Mining LMS data to develop an “early warning system” for educators: A case study. *Computers & Education, 54*(2), 588–599. https://doi.org/10.1016/j.compedu.2009.09.008
+
+Ministerio de Educación del Estado Plurinacional de Bolivia. (2021). *Reglamento de evaluación del desarrollo curricular del Sistema Educativo Plurinacional*.
+
+Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot, M., & Duchesnay, É. (2011). Scikit-learn: Machine learning in Python. *Journal of Machine Learning Research, 12*, 2825–2830.
+
+Provost, F., & Fawcett, T. (2013). *Data science for business*. O’Reilly Media.
+
+Romero, C., & Ventura, S. (2020). Educational data mining and learning analytics: An updated survey. *WIREs Data Mining and Knowledge Discovery, 10*(3), e1355. https://doi.org/10.1002/widm.1355
+
+Streamlit. (2024). *Streamlit documentation*. https://docs.streamlit.io
+
+Wirth, R., & Hipp, J. (2000). CRISP-DM: Towards a standard process model for data mining. En *Proceedings of the 4th International Conference on the Practical Applications of Knowledge Discovery and Data Mining* (pp. 29–39).
 
 ---
 
@@ -68,22 +89,43 @@ El sistema iniciará automáticamente un servidor web local accesible desde el n
 
 ---
 
-### Anexo 3: Resumen de Boletines Centralizadores Procesados (2021-2024)
+### Anexo 3: Resumen de Boletines Centralizadores Procesados (2022-2024)
 
 Se procesaron un total de **36 archivos de planillas de centralizadores** correspondientes a:
-- **Gestión 2021**: 1.º a 6.º de Primaria (Paralelos A y B)
 - **Gestión 2022**: 1.º a 6.º de Primaria (Paralelos A y B)
 - **Gestión 2023**: 1.º a 6.º de Primaria (Paralelos A y B)
 - **Gestión 2024**: 1.º a 6.º de Primaria (Paralelos A y B)
 
 ---
 
-### Anexo 4: Códigos QR y Enlaces a Recursos Digitales
+### Anexo 4: Trazabilidad de la Muestra Predictiva
+
+| Etapa | Registros | Casos positivos |
+|---|---:|---:|
+| Dataset consolidado | 1.118 | 23 observaciones con rezago descriptivo |
+| Transiciones consecutivas T→T+1 con origen y destino completos | 489 | 6 |
+| Entrenamiento 2022→2023 | 241 | 3 |
+| Prueba temporal 2023→2024 | 248 | 3 |
+
+### Anexo 5: Resultados Reproducibles
+
+Las métricas y los hiperparámetros se guardan en `resultados_modelos/metricas_modelos.json`. El comando `python scripts/train_models.py` reconstruye las transiciones, evalúa temporalmente los modelos y exporta los artefactos de despliegue. Las figuras 4.6 y 4.7 se generan desde estos resultados y no contienen valores escritos manualmente.
+
+### Anexo 6: Privacidad y Uso Responsable
+
+El protocolo completo se incluye en `documentacion/08_Protocolo_Privacidad.md`. Los datos originales no forman parte del repositorio Git y cualquier acceso externo requiere autorización institucional y seudonimización.
+
+### Anexo 7: Pruebas del Prototipo
+
+La suite `tests/test_project.py` verifica el esquema de archivos cargados, los rangos de notas, el rechazo de columnas faltantes y la separación entre probabilidad del modelo y regla pedagógica.
+
+---
+
+### Anexo 8: Códigos QR y Enlaces a Recursos Digitales
 
 Para facilitar la verificación y reproducción de los resultados, se disponen los accesos directos digitales:
 
 | Recurso Digital | Descripción | Código QR |
 | :--- | :--- | :---: |
 | **Repositorio GitHub** | Código fuente, notebooks de modelado y aplicación Streamlit.<br>Enlace: [github.com/exiach/Final-proyect](https://github.com/exiach/Final-proyect) | ![QR GitHub](file:///Users/danielcanqui/Projects/Final_Project/documentacion/figuras/qr_github.png) |
-| **Carpeta Google Drive** | Centralizadores originales, datasets procesados y modelos serializados.<br>Enlace: [Carpeta de Recursos Drive](https://drive.google.com/drive/folders/1PQvYRbyuSNka2ZJkGrQ1J6fSVhsV317g?usp=sharing) | ![QR Google Drive](file:///Users/danielcanqui/Projects/Final_Project/documentacion/figuras/qr_drive.png) |
-
+| **Carpeta Google Drive restringida** | Material autorizado para evaluación. No debe conceder acceso público a datos identificables de menores.<br>Enlace: [Carpeta de Recursos Drive](https://drive.google.com/drive/folders/1PQvYRbyuSNka2ZJkGrQ1J6fSVhsV317g?usp=sharing) | ![QR Google Drive](file:///Users/danielcanqui/Projects/Final_Project/documentacion/figuras/qr_drive.png) |

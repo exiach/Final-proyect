@@ -28,11 +28,11 @@ def render_sidebar(df_data: pd.DataFrame) -> pd.DataFrame:
         unsafe_allow_html=True
     )
     
-    # 1. Carga dinámica de archivo 2025 desde la interfaz
+    # 1. Carga dinámica de una nueva gestión desde la interfaz
     st.sidebar.markdown(
         """
         <div style="font-size: 0.85rem; font-weight: 600; color: #38BDF8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">
-            📂 Cargar Datos (Gestión 2025)
+            📂 Cargar Datos de Nueva Gestión
         </div>
         """,
         unsafe_allow_html=True
@@ -41,7 +41,7 @@ def render_sidebar(df_data: pd.DataFrame) -> pd.DataFrame:
     uploaded_file = st.sidebar.file_uploader(
         "Subir boletín/dataset (CSV o XLSX):",
         type=["csv", "xlsx"],
-        help="Cargue un archivo con datos de la gestión 2025 para predecir alertas tempranas."
+        help="El archivo debe incluir la columna gestión, los metadatos requeridos y las nueve calificaciones completas."
     )
     
     df_current = df_data.copy()
@@ -70,7 +70,12 @@ def render_sidebar(df_data: pd.DataFrame) -> pd.DataFrame:
     )
     
     for cat, info in PALETA_RIESGO.items():
-        badge_cls = "badge-alto" if cat == "Alto Riesgo" else ("badge-medio" if cat == "Medio Riesgo" else "badge-bajo")
+        badge_cls = {
+            "Alto Riesgo": "badge-alto",
+            "Medio Riesgo": "badge-medio",
+            "Bajo Riesgo": "badge-bajo",
+            "Sin datos": "",
+        }[cat]
         st.sidebar.markdown(
             f"""
             <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; margin-bottom: 10px;">

@@ -7,7 +7,7 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 from typing import Any
-from src.predictor import predict_student_risk
+from src.predictor import predict_student_risk_details
 
 
 def render_tab_free_simulation(
@@ -54,9 +54,14 @@ def render_tab_free_simulation(
         prom_libre = st.slider("Promedio General (0 - 100 pts)", 0.0, 100.0, 60.0, 1.0)
         reprob_libre = st.slider("Materias Reprobadas (0 - 9)", 0, 9, 0, 1)
         
-        p_lib, r_lib, c_lib, b_lib, rec_lib = predict_student_risk(
+        detail = predict_student_risk_details(
             prom_libre, reprob_libre, modelo_seleccionado, rf_model, mlp_model, scaler
         )
+        p_lib = detail['probabilidad_operativa']
+        r_lib = detail['nivel_riesgo']
+        c_lib = detail['color']
+        b_lib = detail['badge']
+        rec_lib = detail['recomendacion']
         
         st.markdown(
             f"""
@@ -68,8 +73,10 @@ def render_tab_free_simulation(
                     {b_lib}
                 </div>
                 <div style="font-size: 1.1rem; font-weight: 700; color: #F8FAFC; margin-bottom: 10px;">
-                    Probabilidad de Rezago: <span style="color: #38BDF8;">{p_lib*100:.1f}%</span>
+                    Probabilidad del modelo: <span style="color: #38BDF8;">{detail['probabilidad_modelo']*100:.1f}%</span><br>
+                    Puntaje operativo: <span style="color: #38BDF8;">{p_lib*100:.1f}%</span>
                 </div>
+                <div style="font-size: 0.8rem; color: #94A3B8;">{detail['motivo']}</div>
             </div>
             """,
             unsafe_allow_html=True

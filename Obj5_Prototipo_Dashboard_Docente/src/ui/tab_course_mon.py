@@ -46,10 +46,12 @@ def render_tab_course_monitoring(
     alto_cnt = (df_filtered['nivel_riesgo'] == "Alto Riesgo").sum()
     medio_cnt = (df_filtered['nivel_riesgo'] == "Medio Riesgo").sum()
     bajo_cnt = (df_filtered['nivel_riesgo'] == "Bajo Riesgo").sum()
+    sin_datos_cnt = (df_filtered['nivel_riesgo'] == "Sin datos").sum()
     
     col_kpi1, col_kpi2, col_kpi3, col_kpi4 = st.columns(4)
     with col_kpi1:
-        st.markdown(render_kpi_card("Total Alumnos", str(total_estudiantes), "cyan", f"Gestión {sel_gestion}"), unsafe_allow_html=True)
+        detalle_total = f"Gestión {sel_gestion} · {sin_datos_cnt} sin datos" if sin_datos_cnt else f"Gestión {sel_gestion}"
+        st.markdown(render_kpi_card("Total Alumnos", str(total_estudiantes), "cyan", detalle_total), unsafe_allow_html=True)
     with col_kpi2:
         st.markdown(render_kpi_card(f"🔴 Alto Riesgo ({gestion_predicha})", str(alto_cnt), "rose", f"{(alto_cnt/total_estudiantes*100):.1f}% del grupo" if total_estudiantes > 0 else "0%"), unsafe_allow_html=True)
     with col_kpi3:
@@ -64,8 +66,8 @@ def render_tab_course_monitoring(
     with col_tb1:
         filtro_riesgo_tb = st.multiselect(
             "Filtrar Alertas de la Tabla:",
-            ["Alto Riesgo", "Medio Riesgo", "Bajo Riesgo"],
-            default=["Alto Riesgo", "Medio Riesgo", "Bajo Riesgo"]
+            ["Alto Riesgo", "Medio Riesgo", "Bajo Riesgo", "Sin datos"],
+            default=["Alto Riesgo", "Medio Riesgo", "Bajo Riesgo", "Sin datos"]
         )
     
     df_tabla = df_filtered[df_filtered['nivel_riesgo'].isin(filtro_riesgo_tb)].copy()
@@ -79,8 +81,10 @@ def render_tab_course_monitoring(
             "Grado": df_tabla['anio_escolaridad'],
             "Paralelo": df_tabla['paralelo'],
             f"Promedio ({lbl_base})": df_tabla['promedio_general'].round(2),
-            f"Reprobadas ({lbl_base})": df_tabla['num_materias_reprobadas'].astype(int),
+            f"Reprobadas ({lbl_base})": df_tabla['num_materias_reprobadas'].astype('Int64'),
             f"Prob. Rezago {gestion_predicha} (%)": (df_tabla['prob_rezago'] * 100).round(1),
+            "Prob. del modelo (%)": (df_tabla['prob_modelo'] * 100).round(1),
+            "Motivo de la alerta": df_tabla['motivo_alerta'],
             "Acción Pedagógica Recomendada": df_tabla['recomendacion']
         }).sort_values(by=f"Prob. Rezago {gestion_predicha} (%)", ascending=False)
         
@@ -110,6 +114,7 @@ def render_tab_course_monitoring(
                 "Alto Riesgo": "#F43F5E",
                 "Medio Riesgo": "#F59E0B",
                 "Bajo Riesgo": "#10B981"
+                ,"Sin datos": "#94A3B8"
             },
             hole=0.55
         )

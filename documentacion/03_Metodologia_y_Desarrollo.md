@@ -2,13 +2,13 @@
 
 ## 3.1 Enfoque de Investigación y Metodología CRISP-DM
 
-El proyecto adopta un enfoque de investigación aplicada de tipo cuantitativo y explicativo-predictivo. Para guiar el ciclo de vida del desarrollo de la solución analítica, se empleó la metodología estándar de la industria **CRISP-DM** (*Cross-Industry Standard Process for Data Mining*), estructurada en seis fases adaptadas al contexto educativo de la U.E. José María Santiváñez:
+El proyecto adopta un enfoque aplicado, cuantitativo y exploratorio-predictivo; no pretende establecer relaciones causales. Para guiar el desarrollo de la solución analítica se empleó **CRISP-DM** (*Cross-Industry Standard Process for Data Mining*), en seis fases adaptadas al contexto educativo de la U.E. José María Santiváñez:
 
 ```text
 [Fase 1: Comprensión del Negocio Educativo]
        │
        ▼
-[Fase 2: Comprensión de los Datos (Boletines 2021-2024)]
+[Fase 2: Comprensión de los Datos (Boletines 2022-2024)]
        │
        ▼
 [Fase 3: Preparación de Datos & Ingeniería Longitudinal]
@@ -44,7 +44,7 @@ En esta fase inicial se identificaron las necesidades operativas de la U.E. Jos�
 
 ## 3.3 Recopilación y Consolidación de Datos Históricos (Objetivo 1)
 
-Los datos originales consistían en 36 archivos independientes en formato PDF resultantes de las evaluaciones centralizadoras de las gestiones 2021, 2022, 2023 y 2024. Mediante herramientas de conversión documental, estos archivos fueron transformados a planillas de Excel (`data/02_Datos_Extraidos_Excel`).
+Los datos originales consistían en 36 archivos independientes en formato PDF: seis grados, dos paralelos y tres gestiones (2022, 2023 y 2024). Los archivos fueron convertidos a planillas y consolidados mediante procedimientos documentados en `Obj1_Recoleccion_Limpieza.ipynb`. Los originales permanecen fuera del repositorio Git por contener datos personales de menores.
 
 ### 3.3.1 Proceso de Extracción y Limpieza
 Para automatizar la consolidación de los boletines heterogéneos, se diseñó la función `limpiar_boletin_v2()` en el cuaderno `Obj1_Recoleccion_Limpieza.ipynb`. Esta función identifica dinámicamente la fila de encabezados mediante la búsqueda de palabras clave como `"PATERNO"`, `"NOMBRES"` o `"RUDE"`, descarta filas de metadatos institucionales y estandariza los nombres de las columnas.
@@ -87,7 +87,7 @@ def limpiar_boletin_v2(path):
 ```
 
 ### 3.3.2 Consolidación y Construcción de la Variable 'Rezago'
-Tras procesar los 36 archivos, se obtuvo un total de **1,118 registros de estudiantes**. Sobre esta estructura se calcularon las métricas agregadas y la variable dependiente `rezago`:
+Tras procesar los 36 archivos, se obtuvieron **1.118 observaciones estudiante-año** correspondientes a 592 estudiantes únicos. La etiqueta descriptiva `rezago` se definió como la presencia de al menos una asignatura con calificación inferior a 51 puntos. Esta definición operacional se distingue de repetición de curso y deserción.
 
 ```python
 # Snippet 3.2: Consolidación del dataset y creación de la variable target 'rezago'
@@ -127,10 +127,10 @@ materias_criticas = (dataset[materias] < 51).mean().sort_values(ascending=False)
 print(materias_criticas)
 ```
 
-Los resultados empíricos revelaron que **Comunicación y Lenguajes** ($2.06\%$) y **Matemática** ($1.70\%$) constituyen las áreas de mayor vulnerabilidad académica en el nivel primario.
+Descriptivamente, **Comunicación y Lenguajes** (2,06 %) y **Matemática** (1,70 %) registraron las mayores tasas de reprobación del conjunto analizado. El resultado caracteriza esta muestra y no demuestra causalidad.
 
 ### 3.4.2 Comparación de Medias por Condición de Rezago
-El análisis comparativo de promedios entre estudiantes aprobados ($rezago=0$) y rezagados ($rezago=1$) demostró que los alumnos en riesgo sufren un deterioro generalizado en todas las áreas del conocimiento:
+La comparación descriptiva de promedios entre observaciones sin rezago (`rezago=0`) y con rezago (`rezago=1`) mostró menores valores en el segundo grupo. No se realizó una prueba inferencial ni se interpreta la diferencia como efecto causal:
 
 ```python
 # Snippet 3.4: Comparación de promedios por grupo de rezago
@@ -152,16 +152,23 @@ Para predecir el riesgo de rezago académico en una gestión futura a partir del
 # Ordenar secuencialmente por estudiante y año
 dataset = dataset.sort_values(["rude", "gestion"]).reset_index(drop=True)
 
-# Crear variables descriptivas del año anterior
-features_base = ["promedio_general", "num_materias_reprobadas"]
-for col in features_base:
-    dataset[f"{col}_prev"] = dataset.groupby("rude")[col].shift(1)
-
-# Crear la variable objetivo a predecir (rezago en la siguiente gestión)
+# Vincular cada observación de la gestión T con el resultado de T+1
+dataset["gestion_objetivo"] = dataset.groupby("rude")["gestion"].shift(-1)
 dataset["rezago_next"] = dataset.groupby("rude")["rezago"].shift(-1)
-
-# Filtrar únicamente registros que poseen historial completo previo y posterior
-model_data = dataset.dropna(subset=["promedio_general_prev", "num_materias_reprobadas_prev", "rezago_next"])
+target_features = dataset.groupby("rude")[[
+    "promedio_general", "num_materias_reprobadas"
+]].shift(-1)
+dataset["objetivo_completo"] = target_features.notna().all(axis=1)
+model_data = dataset[
+    (dataset["gestion_objetivo"] == dataset["gestion"] + 1)
+    & dataset["rezago_next"].notna()
+    & dataset[["promedio_general", "num_materias_reprobadas"]].notna().all(axis=1)
+    & dataset["objetivo_completo"]
+].copy()
+model_data = model_data.rename(columns={
+    "promedio_general": "promedio_general_prev",
+    "num_materias_reprobadas": "num_materias_reprobadas_prev"
+})
 ```
 
 ---
@@ -171,10 +178,10 @@ model_data = dataset.dropna(subset=["promedio_general_prev", "num_materias_repro
 Se experimentó con tres arquitecturas de clasificación supervisada para anticipar el rezago futuro (`rezago_next`):
 
 ### 3.6.1 Árbol de Decisión (`DecisionTreeClassifier`)
-Entrenado con restricción de profundidad máxima (`max_depth=4`) para prevenir el sobreajuste y mantener la interpretabilidad de las reglas de decisión (`Obj3a_Entrenamiento_Arboles_RF.ipynb`).
+Configurado con profundidad máxima 3, mínimo de diez observaciones por hoja y ponderación balanceada de clases. Estas restricciones limitan la complejidad, pero no eliminan el riesgo de sobreajuste.
 
 ### 3.6.2 Random Forest Balanceado (`RandomForestClassifier`)
-Configurado con 200 estimadores y ponderación balanceada de clases para contrarrestar el desbalance de datos:
+Configurado con 300 estimadores, profundidad máxima 4, mínimo de cinco observaciones por hoja y ponderación balanceada de clases. Los parámetros mantienen un modelo simple y reproducible; no representan una optimización concluyente debido a la escasez de positivos.
 
 ```python
 # Snippet 3.6: Entrenamiento de Random Forest con ponderación de clases
@@ -183,8 +190,9 @@ Configurado con 200 estimadores y ponderación balanceada de clases para contrar
 from sklearn.ensemble import RandomForestClassifier
 
 rf_model = RandomForestClassifier(
-    n_estimators=200,
-    max_depth=5,
+    n_estimators=300,
+    max_depth=4,
+    min_samples_leaf=5,
     class_weight="balanced",
     random_state=42
 )
@@ -207,10 +215,12 @@ X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 mlp_model = MLPClassifier(
-    hidden_layer_sizes=(10, 10),
+    hidden_layer_sizes=(4,),
     activation="relu",
     solver="adam",
-    max_iter=500,
+    alpha=0.1,
+    learning_rate_init=0.0001,
+    max_iter=1000,
     random_state=42
 )
 
@@ -221,7 +231,7 @@ mlp_model.fit(X_train_scaled, y_train)
 
 ## 3.7 Evaluación Comparativa y Segregación de Niveles de Riesgo (Objetivo 4)
 
-Los modelos fueron evaluados sobre el conjunto de prueba independiente mediante partición estratificada (`test_size=0.3`, `stratify=y`). 
+La evaluación principal utilizó una separación temporal: 241 transiciones 2022→2023 (tres positivas) para entrenamiento y 248 transiciones 2023→2024 (tres positivas) para prueba. Se excluyeron 33 pares cuyo registro objetivo no contenía calificaciones completas, pues no permiten confirmar una etiqueta negativa. Este diseño evita entrenar con información posterior al periodo evaluado. Debido al reducido número de positivos, todas las métricas se interpretan como exploratorias.
 
 Para operativizar los resultados en la práctica pedagógica, la probabilidad estimada por el modelo $P(Y=1 \mid \mathbf{x})$ se mapea a tres categorías de riesgo mediante la función `nivel_riesgo()`:
 
@@ -257,7 +267,7 @@ El sistema está estructurado bajo principios de modularidad y separación de re
 ![Figura 3.2: Arquitectura de Software del Prototipo de Apoyo Docente](file:///Users/danielcanqui/Projects/Final_Project/documentacion/figuras/fig_3_2_arquitectura_software.png)
 
 ### 3.8.2 Capa de Resguardo Pedagógico Normativo (Sistema Híbrido)
-Para asegurar que la herramienta sea 100% confiable y no emita falsos negativos frente a alumnos con notas reprobatorias, el archivo `src/predictor.py` encapsula la lógica híbrida:
+Como salvaguarda operativa, `src/predictor.py` incorpora reglas pedagógicas que impiden clasificar como bajo riesgo a un perfil que ya presenta promedio reprobatorio o dos o más materias reprobadas. La aplicación muestra por separado la probabilidad estadística y el nivel de alerta resultante; la regla no se interpreta como mejora de la capacidad predictiva del modelo.
 
 ```python
 # Snippet 3.9: Motor predictivo híbrido con Capa de Resguardo Pedagógico Normativo
@@ -296,4 +306,3 @@ def predict_student_risk(promedio, reprobadas, modelo_nombre, rf_model, mlp_mode
 ```
 
 ![Figura 3.3: Diagrama de Flujo de la Capa Híbrida de Resguardo Pedagógico](file:///Users/danielcanqui/Projects/Final_Project/documentacion/figuras/fig_3_3_capa_hibrida_resguardo.png)
-
