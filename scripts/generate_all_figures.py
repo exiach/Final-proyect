@@ -221,7 +221,16 @@ def gen_fig_3_3():
 # FIGURA 4.1: TASA DE REPROBACIÓN POR MATERIA
 # ==============================================================================
 def gen_fig_4_1():
-    rates = (dataset[materias] < 51).mean().sort_values(ascending=True) * 100
+    # Denominador por asignatura: únicamente calificaciones observadas.
+    # Los faltantes no se convierten implícitamente en aprobaciones.
+    rates = (
+        dataset[materias]
+        .lt(51)
+        .where(dataset[materias].notna())
+        .mean()
+        .sort_values(ascending=True)
+        * 100
+    )
     labels = [nombres_materias[m] for m in rates.index]
     
     fig, ax = plt.subplots(figsize=(9, 5), dpi=300)

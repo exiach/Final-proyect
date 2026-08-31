@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 
 import joblib
+import json
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -10,8 +11,9 @@ APP = ROOT / "Obj5_Prototipo_Dashboard_Docente"
 sys.path.insert(0, str(APP))
 
 from src.data_loader import process_dataframe  # noqa: E402
+from src.privacy import public_student_code  # noqa: E402
 from src.predictor import enrich_with_predictions, predict_student_risk_details  # noqa: E402
-from scripts.train_models import build_transitions  # noqa: E402
+from scripts.train_models import FEATURE_MODEL, build_transitions  # noqa: E402
 
 
 class ProjectTests(unittest.TestCase):
@@ -71,6 +73,25 @@ class ProjectTests(unittest.TestCase):
                 "rezago": label,
             })
         self.assertTrue(build_transitions(pd.DataFrame(rows)).empty)
+
+    def test_model_feature_schema_is_explicit_and_stable(self):
+        self.assertEqual(FEATURE_MODEL, ["promedio_general_prev", "num_materias_reprobadas_prev"])
+        self.assertEqual(list(self.rf.feature_names_in_), FEATURE_MODEL)
+
+    def test_metrics_include_reproducibility_metadata_and_baseline(self):
+        metrics = json.loads((ROOT / "resultados_modelos/metricas_modelos.json").read_text(encoding="utf-8"))
+        self.assertEqual(metrics["orden_variables_modelo"], FEATURE_MODEL)
+        self.assertEqual(len(metrics["dataset_sha256"]), 64)
+        self.assertIn("python", metrics["entorno"])
+        baseline = metrics["evaluacion"]["baseline_sin_rezago"]
+        self.assertEqual(baseline["confusion_matrix"], [[245, 0], [3, 0]])
+        self.assertEqual(baseline["balanced_accuracy"], 0.5)
+
+    def test_public_code_is_stable_and_does_not_expose_identifier(self):
+        code = public_student_code("809800682020086")
+        self.assertEqual(code, public_student_code("809800682020086"))
+        self.assertNotIn("809800682020086", code)
+        self.assertTrue(code.startswith("EST-"))
 
 
 if __name__ == "__main__":

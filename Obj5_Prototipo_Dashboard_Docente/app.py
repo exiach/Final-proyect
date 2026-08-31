@@ -26,7 +26,7 @@ def main() -> None:
     # 1. Aplicar diseño visual sofisticado (Warm Academic Modern CSS)
     apply_custom_styles()
     render_header_banner()
-    
+
     # 2. Cargar recursos de Machine Learning
     try:
         rf_model, mlp_model, scaler = load_trained_models()

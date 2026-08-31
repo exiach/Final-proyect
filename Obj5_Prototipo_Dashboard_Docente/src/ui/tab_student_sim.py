@@ -9,6 +9,7 @@ import streamlit as st
 from typing import Any
 from config import SUBJECT_COLS, SUBJECT_NAMES, MIN_APROBACION_NOTA
 from src.predictor import predict_student_risk
+from src.privacy import public_student_code
 from src.ui.styles import render_kpi_card
 
 
@@ -48,7 +49,7 @@ def render_tab_student_simulation(
     # 1. Selector de Alumno
     estudiantes_list = df_filtered[['nombre_completo', 'rude']].drop_duplicates()
     opciones_estudiantes = {
-        f"{row['nombre_completo']} (RUDE: {row['rude']})": row['rude']
+        f"{row['nombre_completo']} (Código: {public_student_code(row['rude'])})": row['rude']
         for _, row in estudiantes_list.iterrows()
     }
     
@@ -90,7 +91,7 @@ def render_tab_student_simulation(
                 </div>
                 <div style="font-size: 0.9rem; color: #CBD5E1; line-height: 1.8;">
                     <div><b>Nombre:</b> <span style="color: #F8FAFC;">{est_row['nombre_completo']}</span></div>
-                    <div><b>RUDE:</b> <span style="color: #38BDF8;">{est_row['rude']}</span></div>
+                    <div><b>Código:</b> <span style="color: #38BDF8;">{public_student_code(est_row['rude'])}</span></div>
                     <div><b>Grado / Paralelo:</b> {est_row['anio_escolaridad']} - '{est_row['paralelo']}'</div>
                     <div><b>Promedio Base:</b> {promedio_texto}</div>
                     <div><b>Reprobadas Base:</b> {reprobadas_texto}</div>

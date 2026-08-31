@@ -8,6 +8,7 @@ import streamlit as st
 import plotly.express as px
 from config import SUBJECT_COLS, SUBJECT_NAMES
 from src.ui.styles import render_kpi_card
+from src.privacy import public_student_code
 
 
 def render_tab_course_monitoring(
@@ -77,7 +78,7 @@ def render_tab_course_monitoring(
         df_display = pd.DataFrame({
             f"Alerta ({gestion_predicha})": df_tabla['badge_riesgo'],
             "Nombre del Estudiante": df_tabla['nombre_completo'],
-            "RUDE": df_tabla['rude'],
+            "Código seudónimo": df_tabla['rude'].map(public_student_code),
             "Grado": df_tabla['anio_escolaridad'],
             "Paralelo": df_tabla['paralelo'],
             f"Promedio ({lbl_base})": df_tabla['promedio_general'].round(2),

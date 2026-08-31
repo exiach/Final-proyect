@@ -76,6 +76,9 @@ def process_dataframe(df: pd.DataFrame, allow_missing_notes: bool = False) -> pd
                 df['num_materias_reprobadas'], errors='coerce'
             ).where(complete_notes)
             df['num_materias_reprobadas'] = df['num_materias_reprobadas'].fillna(calculated_failed)
+        if 'rezago' not in df.columns:
+            # Etiqueta descriptiva de la gestión cargada; no es una predicción T+1.
+            df['rezago'] = (df['num_materias_reprobadas'] > 0).astype('Int64').where(complete_notes)
         df['datos_completos'] = complete_notes
 
     return df

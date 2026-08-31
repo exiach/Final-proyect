@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from uuid import uuid4
+
+import nbformat
+from nbclient import NotebookClient
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,11 +20,12 @@ PRIVACY_NOTICE = (
 
 
 def markdown_cell(text: str) -> dict:
-    return {"cell_type": "markdown", "metadata": {}, "source": [line + "\n" for line in text.splitlines()]}
+    return {"id": uuid4().hex[:8], "cell_type": "markdown", "metadata": {}, "source": [line + "\n" for line in text.splitlines()]}
 
 
 def code_cell(code: str) -> dict:
     return {
+        "id": uuid4().hex[:8],
         "cell_type": "code",
         "execution_count": None,
         "metadata": {},
@@ -45,6 +50,8 @@ def canonical_notebook(title: str, focus: str, model_keys: list[str]) -> dict:
     setup = """from pathlib import Path
 import json
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 ROOT = Path.cwd().parent if Path.cwd().name == 'notebooks' else Path.cwd()
 METRICS_PATH = ROOT / 'resultados_modelos' / 'metricas_modelos.json'
@@ -53,7 +60,9 @@ METRICS_PATH = ROOT / 'resultados_modelos' / 'metricas_modelos.json'
 with METRICS_PATH.open(encoding='utf-8') as stream:
     resultados = json.load(stream)
 
-resultados['entrenamiento_temporal'], resultados['prueba_temporal']"""
+print('Entrenamiento:', resultados['entrenamiento_temporal'])
+print('Prueba:', resultados['prueba_temporal'])
+print('Variables:', resultados['variables_predictoras'])"""
     keys_literal = repr(model_keys)
     table = f"""filas = []
 for nombre in {keys_literal}:
@@ -67,7 +76,29 @@ for nombre in {keys_literal}:
         'balanced_accuracy': m['balanced_accuracy'],
         'average_precision': m['average_precision'],
     }})
-pd.DataFrame(filas)"""
+tabla_metricas = pd.DataFrame(filas)
+tabla_metricas"""
+    chart = """metricas_plot = tabla_metricas.set_index('modelo')[
+    ['precision_rezago', 'recall_rezago', 'f1_rezago', 'balanced_accuracy', 'average_precision']
+]
+ax = metricas_plot.plot(kind='bar', figsize=(10, 4), ylim=(0, 1), color=['#2563eb', '#ea580c', '#16a34a', '#7c3aed', '#0891b2'])
+ax.set_title('Comparación de métricas en la prueba temporal 2023→2024')
+ax.set_ylabel('Valor')
+ax.set_xlabel('Modelo')
+ax.legend(loc='upper right', fontsize=8)
+plt.xticks(rotation=0)
+plt.tight_layout()
+plt.show()"""
+    confusion = """fig, axes = plt.subplots(1, len(tabla_metricas), figsize=(4 * len(tabla_metricas), 3))
+if len(tabla_metricas) == 1:
+    axes = [axes]
+for ax, (_, fila) in zip(axes, tabla_metricas.iterrows()):
+    sns.heatmap(fila['matriz_confusion'], annot=True, fmt='d', cmap='Blues', cbar=False, ax=ax)
+    ax.set_title(fila['modelo'])
+    ax.set_xlabel('Predicción')
+    ax.set_ylabel('Real')
+plt.tight_layout()
+plt.show()"""
     return {
         "cells": [
             markdown_cell(f"# {title}\n\n{PRIVACY_NOTICE}"),
@@ -78,6 +109,13 @@ pd.DataFrame(filas)"""
             ),
             code_cell(setup),
             code_cell(table),
+            code_cell(chart),
+            code_cell(confusion),
+            markdown_cell(
+                "## Lectura responsable\n\nLa clase positiva tiene solo tres casos en la prueba. "
+                "Las matrices y métricas describen este corte temporal; no prueban generalización, "
+                "causalidad ni impacto pedagógico. La regla de resguardo de la interfaz se evalúa por separado."
+            ),
         ],
         "metadata": {
             "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
@@ -110,9 +148,19 @@ def main() -> None:
         ),
     }
     for filename, notebook in replacements.items():
-        (NOTEBOOK_DIR / filename).write_text(
+        path = NOTEBOOK_DIR / filename
+        path.write_text(
             json.dumps(notebook, ensure_ascii=False, indent=1) + "\n", encoding="utf-8"
         )
+        nb = nbformat.read(path, as_version=4)
+        client = NotebookClient(
+            nb,
+            timeout=180,
+            kernel_name="python3",
+            resources={"metadata": {"path": str(NOTEBOOK_DIR)}},
+        )
+        client.execute()
+        nbformat.write(nb, path)
 
 
 if __name__ == "__main__":

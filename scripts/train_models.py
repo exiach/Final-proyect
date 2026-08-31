@@ -8,11 +8,15 @@ No utiliza identificadores ni datos personales como predictores.
 from __future__ import annotations
 
 import json
+import hashlib
+import platform
 from pathlib import Path
+from datetime import datetime, timezone
 
 import joblib
 import numpy as np
 import pandas as pd
+import sklearn
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     average_precision_score,
@@ -104,6 +108,20 @@ def metrics(y_true: pd.Series, prob: np.ndarray, threshold: float = 0.5) -> dict
     }
 
 
+def majority_baseline(y_true: pd.Series) -> dict:
+    """Línea base que siempre predice la clase mayoritaria (sin rezago)."""
+    probabilities = np.zeros(len(y_true), dtype=float)
+    return metrics(y_true, probabilities)
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def main() -> None:
     dataset = pd.read_csv(DATA_PATH)
     transitions = build_transitions(dataset)
@@ -126,6 +144,7 @@ def main() -> None:
             model.fit(X_train, y_train)
             prob = model.predict_proba(X_test)[:, 1]
         evaluation[name] = metrics(y_test, prob)
+    evaluation["baseline_sin_rezago"] = majority_baseline(y_test)
 
     # Modelos de despliegue: se reentrenan con todas las transiciones observadas.
     X_all, y_all = transitions[FEATURE_MODEL], transitions["rezago_next"]
@@ -141,6 +160,16 @@ def main() -> None:
     joblib.dump(scaler, MODEL_DIR / "scaler.pkl")
 
     metadata = {
+        "version_artefacto": "1.1.0",
+        "fecha_entrenamiento_utc": datetime.now(timezone.utc).isoformat(),
+        "dataset_sha256": sha256_file(DATA_PATH),
+        "entorno": {
+            "python": platform.python_version(),
+            "numpy": np.__version__,
+            "pandas": pd.__version__,
+            "scikit_learn": sklearn.__version__,
+            "joblib": joblib.__version__,
+        },
         "metodologia": "Predictores de gestión T y rezago de gestión T+1",
         "periodo_dataset": sorted(int(x) for x in dataset["gestion"].unique()),
         "n_observaciones_dataset": int(len(dataset)),
@@ -158,6 +187,7 @@ def main() -> None:
             "positivos": int(y_test.sum()),
         },
         "variables_predictoras": FEATURE_MODEL,
+        "orden_variables_modelo": FEATURE_MODEL,
         "evaluacion": evaluation,
         "nota_limitacion": (
             "Solo existen seis transiciones positivas; las métricas son exploratorias "

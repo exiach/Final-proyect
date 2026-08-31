@@ -1,4 +1,14 @@
 {
+  "version_artefacto": "1.1.0",
+  "fecha_entrenamiento_utc": "2026-08-22T20:05:50.096158+00:00",
+  "dataset_sha256": "d4ab7b4e04d6f7111cef37991794a28edf05211aa0c8b6b5be10a9e9d44de485",
+  "entorno": {
+    "python": "3.12.0",
+    "numpy": "2.1.3",
+    "pandas": "2.3.3",
+    "scikit_learn": "1.8.0",
+    "joblib": "1.5.3"
+  },
   "metodologia": "Predictores de gestión T y rezago de gestión T+1",
   "periodo_dataset": [
     2022,
@@ -20,6 +30,10 @@
     "positivos": 3
   },
   "variables_predictoras": [
+    "promedio_general_prev",
+    "num_materias_reprobadas_prev"
+  ],
+  "orden_variables_modelo": [
     "promedio_general_prev",
     "num_materias_reprobadas_prev"
   ],
@@ -78,6 +92,26 @@
       ],
       "balanced_accuracy": 0.5,
       "average_precision": 0.23315363881401616,
+      "precision_rezago": 0.0,
+      "recall_rezago": 0.0,
+      "f1_rezago": 0.0,
+      "support_no_rezago": 245,
+      "support_rezago": 3
+    },
+    "baseline_sin_rezago": {
+      "threshold": 0.5,
+      "confusion_matrix": [
+        [
+          245,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "balanced_accuracy": 0.5,
+      "average_precision": 0.012096774193548387,
       "precision_rezago": 0.0,
       "recall_rezago": 0.0,
       "f1_rezago": 0.0,
